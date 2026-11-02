@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 const app = express();
 app.use(cors());
@@ -11,6 +12,7 @@ app.get("/test", (req, res) => {
 });
 
 // Connect routes
+app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
 
 const PORT = 3000;
