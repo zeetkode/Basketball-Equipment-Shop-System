@@ -2,10 +2,13 @@ const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.json()); // Allows Express to read JSON body
+app.use(express.static(path.join(__dirname, "Frontend")));
+app.use(express.static(__dirname));
 
 app.get("/test", (req, res) => {
   res.json({ message: "The server is alive!" });
