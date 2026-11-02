@@ -1,27 +1,51 @@
-
 const express = require("express");
+const cors = require("cors");
+
+// Your database connection for Addresses, Suppliers, and Payments
 const db = require("./config/db");
 
-const app = express();
-const port = 3000;
+// Group's User routes
+const userRoutes = require("./routes/userRoutes");
 
+// Group's database connection
+const pool = require("./db");
+
+const app = express();
+const PORT = 3000;
+
+// Middleware
+app.use(cors());
 app.use(express.json());
 
 // Home route
 app.get("/", (req, res) => {
-  res.send("Basketball Equipment Shop API is running!");
+    res.send("Basketball Equipment Shop API is running!");
 });
+
+// Group's test route
+app.get("/test", (req, res) => {
+    res.json({ message: "The server is alive!" });
+});
+
+// Group's User routes
+app.use("/api/users", userRoutes);
+
+// ===============================
+// SUPPLIERS
+// ===============================
 
 // GET all suppliers
 app.get("/suppliers", (req, res) => {
-  db.query("SELECT * FROM SUPPLIERS", (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+    db.query("SELECT * FROM SUPPLIERS", (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
 
-    res.json(results);
-  });
+        res.json(results);
+    });
 });
+
+// POST a new supplier
 app.post("/suppliers", (req, res) => {
     const {
         SUPPLIER_NAME,
@@ -54,6 +78,11 @@ app.post("/suppliers", (req, res) => {
         });
     });
 });
+
+// ===============================
+// ADDRESSES
+// ===============================
+
 // GET all addresses
 app.get("/addresses", (req, res) => {
     db.query("SELECT * FROM ADDRESSES", (err, results) => {
@@ -64,6 +93,7 @@ app.get("/addresses", (req, res) => {
         res.json(results);
     });
 });
+
 // POST a new address
 app.post("/addresses", (req, res) => {
     const {
@@ -96,6 +126,11 @@ app.post("/addresses", (req, res) => {
         }
     );
 });
+
+// ===============================
+// PAYMENTS
+// ===============================
+
 // GET all payments
 app.get("/payments", (req, res) => {
     db.query("SELECT * FROM PAYMENTS", (err, results) => {
@@ -106,6 +141,7 @@ app.get("/payments", (req, res) => {
         res.json(results);
     });
 });
+
 // POST a new payment
 app.post("/payments", (req, res) => {
     const {
@@ -137,7 +173,13 @@ app.post("/payments", (req, res) => {
         }
     );
 });
-// Start server LAST
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+
+// Check group's database connection
+pool.query("SELECT 1")
+    .then(() => console.log("Database connected successfully!"))
+    .catch((err) => console.error("Group database connection failed:", err.message));
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
