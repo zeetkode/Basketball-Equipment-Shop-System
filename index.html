@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Master Data Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        input,
+        button {
+            padding: 6px 10px;
+            margin: 4px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 6px 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Master Data Management</h2>
+
+    <div class="section">
+        <h3>Categories</h3>
+        <input type="text" id="catInput" placeholder="New Category">
+        <button onclick="addItem('categories', 'catInput')">Add Category</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="categoriesTable"></tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Brands</h3>
+        <input type="text" id="brandInput" placeholder="New Brand">
+        <button onclick="addItem('brands', 'brandInput')">Add Brand</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="brandsTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        async function loadData(type, tableId) {
+            try {
+                const res = await fetch(${ API_URL } / ${ type });
+                const data = await res.json();
+                const tbody = document.getElementById(tableId);
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.name}</td><td>
+            <button onclick="editItem('${type}', ${item.id}, '${item.name}')">Edit</button>
+            <button onclick="deleteItem('${type}', ${item.id})">Delete</button></td></tr>`;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        function refresh() {
+            loadData('categories', 'categoriesTable');
+            loadData('brands', 'brandsTable');
+        }
+
+        async function addItem(type, inputId) {
+            const input = document.getElementById(inputId);
+            if (!input.value) return;
+            await fetch(${ API_URL } / ${ type }, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: input.value })
+            });
+            input.value = ''; refresh();
+        }
+
+        async function editItem(type, id, oldName) {
+            const newName = prompt('Enter new name:', oldName);
+            if (!newName) return;
+            await fetch(${ API_URL } / ${ type } / ${ id }, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName })
+            });
+            refresh();
+        }
+
+        async function deleteItem(type, id) {
+            if (!confirm('Are you sure?')) return;
+            await fetch(${ API_URL } / ${ type } / ${ id }, { method: 'DELETE' });
+            refresh();
+        }
+
+        refresh();
+    </script>
+</body>
+
+</html>

@@ -14,5 +14,13 @@
     "cors": "^2.8.6",
     "express": "^5.3.0",
     "mysql2": "^3.24.6"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeetkode/Basketball-Equipment-Shop-System.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zeetkode/Basketball-Equipment-Shop-System/issues"
+  },
+  "homepage": "https://github.com/zeetkode/Basketball-Equipment-Shop-System#readme"
 }
