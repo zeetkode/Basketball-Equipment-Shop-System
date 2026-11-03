@@ -70,3 +70,18 @@ CREATE TABLE IF NOT EXISTS orders (
 -- 5. Seed Test Data (Ensures Michael Jordan exists for your Orders JOIN query)
 INSERT IGNORE INTO users (user_id, username, full_name, email, password_hash, role_id, role) 
 VALUES (1, 'mjordan', 'Michael Jordan', 'mj@bulls.com', 'hashedpassword23', 2, 'customer');
+
+CREATE DATABASE IF NOT EXISTS basketball_shop;
+USE basketball_shop;
+
+-- Create categories table
+CREATE TABLE IF NOT EXISTS categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+-- Create brands table
+CREATE TABLE IF NOT EXISTS brands (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
