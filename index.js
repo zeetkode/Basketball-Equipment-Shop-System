@@ -20,6 +20,8 @@ app.get("/test", (req, res) => {
 // Connect routes
 app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/supplier-orders", require("./routes/supplierOrderRoutes"));
+app.use("/api/shipments", require("./routes/shipmentRoutes"));
 
 const PORT = 3000;
 const db = require("./db");
