@@ -1,453 +1,381 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Supplier Orders</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 24px;
-      background: #f5f5f5;
-      color: #222;
-    }
-
-    main { max-width: 1100px; margin: 0 auto; }
-    a { color: #a83d00; }
-
-    .panel {
-      margin-top: 20px;
-      padding: 20px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-    }
-
-    h2 { margin-top: 0; }
-
-    .form-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: flex-end;
-      margin-bottom: 12px;
-    }
-
-    .field { display: flex; flex-direction: column; }
-    label { margin-bottom: 4px; font-weight: bold; font-size: 14px; }
-
-    select, input {
-      padding: 8px;
-      font-size: 15px;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-    }
-
-    button {
-      padding: 8px 14px;
-      font-size: 14px;
-      cursor: pointer;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-      background: #fff;
-    }
-
-    button.primary { background: #ff6600; color: white; border: none; font-weight: bold; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; background: #fff; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
-    th { background: #f1f1f1; }
-
-    .status {
-      padding: 3px 7px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 12px;
-      text-transform: capitalize;
-    }
-
-    .draft { background: #e0e0e0; }
-    .placed { background: #ffeaa7; }
-    .partially_received { background: #74b9ff; color: #fff; }
-    .received { background: #55efc4; }
-    .cancelled { background: #fab1a0; }
-
-    .message { margin: 8px 0 0 0; color: #555; }
-    .error { color: #c0392b; font-weight: bold; }
-
-    .item-line { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-    .items-cell { background: #fafafa; font-size: 13px; }
-    .items-cell ul { margin: 4px 0; padding-left: 18px; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supplier Orders - Basketball Shop</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main>
-    <a href="index.html">Back to Home</a>
 
-    <h1>Supplier Orders</h1>
+    <!-- Global Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="brand">🏀 Basketball Shop</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Users & Roles</a></li>
+            <li><a href="md.html">Master Data</a></li>
+            <li><a href="orders.html">Shop Orders</a></li>
+            <li><a href="supplierOrders.html" class="active">Supplier Orders</a></li>
+            <li><a href="shipments.html">Shipments</a></li>
+        </ul>
+    </nav>
 
-    <section class="panel">
-      <h2>Create Supplier Order</h2>
+    <main>
+        <h1>Supplier Orders Management</h1>
 
-      <div class="form-row">
-        <div class="field">
-          <label for="supplierSelect">Supplier</label>
-          <select id="supplierSelect">
-            <option value="">Loading suppliers...</option>
-          </select>
-        </div>
+        <section class="panel">
+            <h2>Create Supplier Order</h2>
 
-        <div class="field">
-          <label for="expectedDate">Expected date</label>
-          <input type="date" id="expectedDate" />
-        </div>
-      </div>
+            <div class="form-row">
+                <div class="field">
+                    <label for="supplierSelect">Supplier</label>
+                    <select id="supplierSelect">
+                        <option value="">Loading suppliers...</option>
+                    </select>
+                </div>
 
-      <h3>Order Items</h3>
-      <div id="itemLines"></div>
-      <button type="button" id="addItemBtn">+ Add another item</button>
+                <div class="field">
+                    <label for="expectedDate">Expected Date</label>
+                    <input type="date" id="expectedDate" />
+                </div>
+            </div>
 
-      <div class="form-row" style="margin-top: 16px;">
-        <button type="button" class="primary" id="createBtn">Create Order</button>
-      </div>
+            <h3>Order Items</h3>
+            <div id="itemLines" style="margin-bottom: 12px;"></div>
+            <button type="button" id="addItemBtn">+ Add Another Item</button>
 
-      <p id="formStatus" class="message"></p>
-    </section>
+            <div style="margin-top: 16px;">
+                <button type="button" class="primary" id="createBtn">Create Order</button>
+            </div>
 
-    <section class="panel">
-      <h2>All Supplier Orders</h2>
-      <p id="listStatus" class="message">Loading orders...</p>
+            <p id="formStatus" class="message"></p>
+        </section>
 
-      <table id="ordersTable">
-        <thead>
-          <tr>
-            <th>Order ID</th>
-            <th>Supplier</th>
-            <th>Contact</th>
-            <th>Order Date</th>
-            <th>Expected</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-  </main>
+        <section class="panel">
+            <h2>All Supplier Orders</h2>
+            <p id="listStatus" class="message">Loading orders...</p>
 
-  <script>
-    const API = "api/supplier-orders";
-    const API_SUPPLIERS = "api/supplier-orders/suppliers";
-    const API_EQUIPMENT = "api/supplier-orders/equipment";
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Supplier</th>
+                        <th>Contact</th>
+                        <th>Order Date</th>
+                        <th>Expected</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
 
-    const supplierSelect = document.getElementById("supplierSelect");
-    const expectedDate = document.getElementById("expectedDate");
-    const itemLines = document.getElementById("itemLines");
-    const addItemBtn = document.getElementById("addItemBtn");
-    const createBtn = document.getElementById("createBtn");
-    const formStatus = document.getElementById("formStatus");
-    const listStatus = document.getElementById("listStatus");
-    const tbody = document.querySelector("#ordersTable tbody");
+    <script src="config.js"></script>
+    <script>
+        const API = `${API_BASE_URL}/supplier-orders`;
+        const API_SUPPLIERS = `${API_BASE_URL}/supplier-orders/suppliers`;
+        const API_EQUIPMENT = `${API_BASE_URL}/supplier-orders/equipment`;
 
-    // The five values the database enum allows.
-    const STATUSES = ["draft", "placed", "partially_received", "received", "cancelled"];
+        const supplierSelect = document.getElementById("supplierSelect");
+        const expectedDate = document.getElementById("expectedDate");
+        const itemLines = document.getElementById("itemLines");
+        const addItemBtn = document.getElementById("addItemBtn");
+        const createBtn = document.getElementById("createBtn");
+        const formStatus = document.getElementById("formStatus");
+        const listStatus = document.getElementById("listStatus");
+        const tbody = document.querySelector("#ordersTable tbody");
 
-    let suppliers = [];
-    let equipment = [];
+        const STATUSES = ["draft", "placed", "partially_received", "received", "cancelled"];
 
-    function showFormStatus(text, isError) {
-      formStatus.textContent = text;
-      formStatus.className = isError ? "message error" : "message";
-    }
+        let suppliers = [];
+        let equipment = [];
 
-    function fillSelect(select, rows, valueKey, labelKey, placeholder) {
-      select.replaceChildren();
-      const first = document.createElement("option");
-      first.value = "";
-      first.textContent = placeholder;
-      select.appendChild(first);
+        function showFormStatus(text, isError) {
+            formStatus.textContent = text;
+            formStatus.className = isError ? "message error" : "message success";
+        }
 
-      rows.forEach(row => {
-        const option = document.createElement("option");
-        option.value = row[valueKey];
-        option.textContent = row[labelKey];
-        select.appendChild(option);
-      });
-    }
+        function fillSelect(select, rows, valueKey, labelKey, placeholder) {
+            select.replaceChildren();
+            const first = document.createElement("option");
+            first.value = "";
+            first.textContent = placeholder;
+            select.appendChild(first);
 
-    // ---- Load the dropdown data ---------------------------------------
+            rows.forEach(row => {
+                const option = document.createElement("option");
+                option.value = row[valueKey];
+                option.textContent = row[labelKey];
+                select.appendChild(option);
+            });
+        }
 
-    async function loadDropdowns() {
-      try {
-        const [supplierRes, equipmentRes] = await Promise.all([
-          fetch(API_SUPPLIERS),
-          fetch(API_EQUIPMENT)
-        ]);
+        async function loadDropdowns() {
+            try {
+                const [supplierRes, equipmentRes] = await Promise.all([
+                    fetch(API_SUPPLIERS),
+                    fetch(API_EQUIPMENT)
+                ]);
 
-        const supplierData = await supplierRes.json();
-        const equipmentData = await equipmentRes.json();
+                const supplierData = await supplierRes.json();
+                const equipmentData = await equipmentRes.json();
 
-        if (!supplierRes.ok || !supplierData.success) throw new Error("Failed to load suppliers");
-        if (!equipmentRes.ok || !equipmentData.success) throw new Error("Failed to load equipment");
+                if (!supplierRes.ok || !supplierData.success) throw new Error("Failed to load suppliers");
+                if (!equipmentRes.ok || !equipmentData.success) throw new Error("Failed to load equipment");
 
-        suppliers = supplierData.data;
-        equipment = equipmentData.data;
+                suppliers = supplierData.data;
+                equipment = equipmentData.data;
 
-        fillSelect(supplierSelect, suppliers, "supplier_id", "supplier_name", "Choose a supplier");
-      } catch (error) {
-        showFormStatus("Could not load form options: " + error.message, true);
-      }
-    }
+                fillSelect(supplierSelect, suppliers, "supplier_id", "supplier_name", "Choose a supplier");
+            } catch (error) {
+                showFormStatus("Could not load form options: " + error.message, true);
+            }
+        }
 
-    // ---- Item lines ----------------------------------------------------
+        function addItemLine() {
+            const line = document.createElement("div");
+            line.className = "form-row";
+            line.style.alignItems = "center";
+            line.style.marginBottom = "8px";
 
-    function addItemLine() {
-      const line = document.createElement("div");
-      line.className = "item-line";
+            const productSelect = document.createElement("select");
+            fillSelect(productSelect, equipment, "equipment_id", "product_name", "Choose equipment");
+            productSelect.style.flex = "2";
 
-      const productSelect = document.createElement("select");
-      fillSelect(productSelect, equipment, "equipment_id", "product_name", "Choose equipment");
-      productSelect.style.minWidth = "280px";
+            const qtyInput = document.createElement("input");
+            qtyInput.type = "number";
+            qtyInput.min = "1";
+            qtyInput.value = "1";
+            qtyInput.style.flex = "1";
 
-      const qtyInput = document.createElement("input");
-      qtyInput.type = "number";
-      qtyInput.min = "1";
-      qtyInput.value = "1";
-      qtyInput.style.width = "90px";
-      qtyInput.setAttribute("aria-label", "Quantity");
+            const removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.className = "delete-btn";
+            removeBtn.textContent = "Remove";
+            removeBtn.addEventListener("click", () => line.remove());
 
-      const removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.textContent = "Remove";
-      removeBtn.addEventListener("click", () => line.remove());
+            line.append(productSelect, qtyInput, removeBtn);
+            itemLines.appendChild(line);
+        }
 
-      line.append(productSelect, qtyInput, removeBtn);
-      itemLines.appendChild(line);
-    }
+        function collectItems() {
+            const lines = itemLines.querySelectorAll(".form-row");
+            const items = [];
 
-    function collectItems() {
-      const lines = itemLines.querySelectorAll(".item-line");
-      const items = [];
+            for (const line of lines) {
+                const productSelect = line.querySelector("select");
+                const qtyInput = line.querySelector("input");
 
-      for (const line of lines) {
-        const productSelect = line.querySelector("select");
-        const qtyInput = line.querySelector("input");
+                if (!productSelect || !productSelect.value) continue;
 
-        if (!productSelect.value) continue;
+                items.push({
+                    equipment_id: Number(productSelect.value),
+                    quantity: Number(qtyInput.value)
+                });
+            }
 
-        items.push({
-          equipment_id: Number(productSelect.value),
-          quantity: Number(qtyInput.value)
+            return items;
+        }
+
+        async function createOrder() {
+            showFormStatus("");
+
+            const supplierId = supplierSelect.value;
+            if (!supplierId) {
+                showFormStatus("Please choose a supplier.", true);
+                return;
+            }
+
+            const items = collectItems();
+            if (items.length === 0) {
+                showFormStatus("Please add at least one item with equipment selected.", true);
+                return;
+            }
+
+            createBtn.disabled = true;
+
+            try {
+                const response = await fetch(API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        supplier_id: Number(supplierId),
+                        expected_date: expectedDate.value || null,
+                        items
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to create order");
+                }
+
+                showFormStatus("Order #" + result.orderId + " created.", false);
+
+                supplierSelect.value = "";
+                expectedDate.value = "";
+                itemLines.replaceChildren();
+                addItemLine();
+
+                loadOrders();
+            } catch (error) {
+                showFormStatus(error.message, true);
+            } finally {
+                createBtn.disabled = false;
+            }
+        }
+
+        async function loadOrders() {
+            listStatus.textContent = "Loading orders...";
+            listStatus.className = "message loading";
+
+            try {
+                const response = await fetch(API);
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to load orders");
+                }
+
+                tbody.replaceChildren();
+
+                if (result.data.length === 0) {
+                    listStatus.textContent = "No supplier orders yet. Create one above.";
+                    listStatus.className = "message";
+                    return;
+                }
+
+                listStatus.textContent = result.data.length + " order(s) found.";
+                listStatus.className = "message success";
+
+                result.data.forEach(order => {
+                    const row = document.createElement("tr");
+
+                    const idCell = document.createElement("td");
+                    idCell.textContent = "#" + order.supplier_order_id;
+
+                    const supplierCell = document.createElement("td");
+                    supplierCell.textContent = order.supplier_name || "";
+
+                    const contactCell = document.createElement("td");
+                    contactCell.textContent = order.contact_person || "";
+
+                    const orderedCell = document.createElement("td");
+                    orderedCell.textContent = order.order_date ? String(order.order_date).substring(0, 10) : "";
+
+                    const expectedCell = document.createElement("td");
+                    expectedCell.textContent = order.expected_date ? String(order.expected_date).substring(0, 10) : "";
+
+                    const statusCell = document.createElement("td");
+                    const tag = document.createElement("span");
+                    tag.className = "status-tag " + order.order_status;
+                    tag.textContent = String(order.order_status).replace(/_/g, " ");
+                    statusCell.appendChild(tag);
+
+                    const actionsCell = document.createElement("td");
+
+                    STATUSES.filter(s => s !== order.order_status).forEach(status => {
+                        const btn = document.createElement("button");
+                        btn.textContent = status.replace(/_/g, " ");
+                        btn.style.marginRight = "4px";
+                        btn.addEventListener("click", () => updateStatus(order.supplier_order_id, status));
+                        actionsCell.appendChild(btn);
+                    });
+
+                    const itemsBtn = document.createElement("button");
+                    itemsBtn.textContent = "Items";
+                    itemsBtn.addEventListener("click", () => toggleItems(order.supplier_order_id, row));
+                    actionsCell.appendChild(itemsBtn);
+
+                    row.append(idCell, supplierCell, contactCell, orderedCell, expectedCell, statusCell, actionsCell);
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                listStatus.textContent = "Could not load orders: " + error.message;
+                listStatus.className = "message error";
+            }
+        }
+
+        async function updateStatus(orderId, status) {
+            try {
+                const response = await fetch(API + "/" + orderId + "/status", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ order_status: status })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to update status");
+                }
+
+                loadOrders();
+            } catch (error) {
+                listStatus.textContent = "Could not update status: " + error.message;
+                listStatus.className = "message error";
+            }
+        }
+
+        async function toggleItems(orderId, row) {
+            const next = row.nextElementSibling;
+            if (next && next.classList.contains("items-row")) {
+                next.remove();
+                return;
+            }
+
+            const itemsRow = document.createElement("tr");
+            itemsRow.className = "items-row";
+            const cell = document.createElement("td");
+            cell.colSpan = 7;
+            cell.style.background = "#fafafa";
+            cell.style.padding = "12px";
+            cell.textContent = "Loading items...";
+            itemsRow.appendChild(cell);
+            row.after(itemsRow);
+
+            try {
+                const response = await fetch(API + "/" + orderId);
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to load items");
+                }
+
+                const items = result.data.items || [];
+                cell.replaceChildren();
+
+                if (items.length === 0) {
+                    cell.textContent = "This order has no items.";
+                    return;
+                }
+
+                const list = document.createElement("ul");
+                list.style.margin = "4px 0";
+                list.style.paddingLeft = "20px";
+                items.forEach(item => {
+                    const li = document.createElement("li");
+                    li.textContent = `${item.product_name || 'Unknown'} (${item.sku || 'no SKU'}) — Qty: ${item.quantity}`;
+                    list.appendChild(li);
+                });
+
+                cell.appendChild(list);
+            } catch (error) {
+                cell.textContent = "Could not load items: " + error.message;
+            }
+        }
+
+        addItemBtn.addEventListener("click", addItemLine);
+        createBtn.addEventListener("click", createOrder);
+
+        window.addEventListener("DOMContentLoaded", () => {
+            addItemLine();
+            loadDropdowns();
+            loadOrders();
         });
-      }
-
-      return items;
-    }
-
-    // ---- Create an order -----------------------------------------------
-
-    async function createOrder() {
-      showFormStatus("");
-
-      const supplierId = supplierSelect.value;
-      if (!supplierId) {
-        showFormStatus("Please choose a supplier.", true);
-        return;
-      }
-
-      const items = collectItems();
-      if (items.length === 0) {
-        showFormStatus("Please add at least one item with equipment selected.", true);
-        return;
-      }
-
-      createBtn.disabled = true;
-
-      try {
-        const response = await fetch(API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            supplier_id: Number(supplierId),
-            expected_date: expectedDate.value || null,
-            items
-          })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to create order");
-        }
-
-        showFormStatus("Order #" + result.orderId + " created.", false);
-
-        // Reset the form for the next entry.
-        supplierSelect.value = "";
-        expectedDate.value = "";
-        itemLines.replaceChildren();
-        addItemLine();
-
-        loadOrders();
-      } catch (error) {
-        showFormStatus(error.message, true);
-      } finally {
-        createBtn.disabled = false;
-      }
-    }
-
-    // ---- List orders ---------------------------------------------------
-
-    async function loadOrders() {
-      listStatus.textContent = "Loading orders...";
-
-      try {
-        const response = await fetch(API);
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to load orders");
-        }
-
-        tbody.replaceChildren();
-
-        if (result.data.length === 0) {
-          listStatus.textContent = "No supplier orders yet. Create one above.";
-          return;
-        }
-
-        listStatus.textContent = result.data.length + " order(s) found.";
-
-        result.data.forEach(order => {
-          const row = document.createElement("tr");
-
-          const idCell = document.createElement("td");
-          idCell.textContent = "#" + order.supplier_order_id;
-
-          const supplierCell = document.createElement("td");
-          supplierCell.textContent = order.supplier_name || "";
-
-          const contactCell = document.createElement("td");
-          contactCell.textContent = order.contact_person || "";
-
-          const orderedCell = document.createElement("td");
-          orderedCell.textContent = order.order_date ? String(order.order_date).substring(0, 10) : "";
-
-          const expectedCell = document.createElement("td");
-          expectedCell.textContent = order.expected_date ? String(order.expected_date).substring(0, 10) : "";
-
-          const statusCell = document.createElement("td");
-          const tag = document.createElement("span");
-          tag.className = "status " + order.order_status;
-          tag.textContent = String(order.order_status).replace(/_/g, " ");
-          statusCell.appendChild(tag);
-
-          const actionsCell = document.createElement("td");
-
-          STATUSES.filter(s => s !== order.order_status).forEach(status => {
-            const btn = document.createElement("button");
-            btn.textContent = status.replace(/_/g, " ");
-            btn.style.marginRight = "4px";
-            btn.addEventListener("click", () => updateStatus(order.supplier_order_id, status));
-            actionsCell.appendChild(btn);
-          });
-
-          const itemsBtn = document.createElement("button");
-          itemsBtn.textContent = "Items";
-          itemsBtn.addEventListener("click", () => toggleItems(order.supplier_order_id, row));
-          actionsCell.appendChild(itemsBtn);
-
-          row.append(idCell, supplierCell, contactCell, orderedCell, expectedCell, statusCell, actionsCell);
-          tbody.appendChild(row);
-        });
-      } catch (error) {
-        listStatus.textContent = "Could not load orders: " + error.message;
-        listStatus.className = "message error";
-      }
-    }
-
-    // ---- Update status -------------------------------------------------
-
-    async function updateStatus(orderId, status) {
-      try {
-        const response = await fetch(API + "/" + orderId + "/status", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ order_status: status })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to update status");
-        }
-
-        loadOrders();
-      } catch (error) {
-        listStatus.textContent = "Could not update status: " + error.message;
-        listStatus.className = "message error";
-      }
-    }
-
-    // ---- Show an order's items -----------------------------------------
-
-    async function toggleItems(orderId, row) {
-      // Clicking again hides the panel.
-      const next = row.nextElementSibling;
-      if (next && next.classList.contains("items-row")) {
-        next.remove();
-        return;
-      }
-
-      const itemsRow = document.createElement("tr");
-      itemsRow.className = "items-row";
-      const cell = document.createElement("td");
-      cell.colSpan = 7;
-      cell.className = "items-cell";
-      cell.textContent = "Loading items...";
-      itemsRow.appendChild(cell);
-      row.after(itemsRow);
-
-      try {
-        const response = await fetch(API + "/" + orderId);
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to load items");
-        }
-
-        const items = result.data.items || [];
-        cell.replaceChildren();
-
-        if (items.length === 0) {
-          cell.textContent = "This order has no items.";
-          return;
-        }
-
-        const list = document.createElement("ul");
-        items.forEach(item => {
-          const li = document.createElement("li");
-          li.textContent = (item.product_name || "Unknown") +
-            " (" + (item.sku || "no SKU") + ") — qty " + item.quantity;
-          list.appendChild(li);
-        });
-
-        cell.appendChild(list);
-      } catch (error) {
-        cell.textContent = "Could not load items: " + error.message;
-      }
-    }
-
-    // ---- Wire up and start ---------------------------------------------
-
-    addItemBtn.addEventListener("click", addItemLine);
-    createBtn.addEventListener("click", createOrder);
-
-    addItemLine();
-    loadDropdowns();
-    loadOrders();
-  </script>
+    </script>
 </body>
 </html>
