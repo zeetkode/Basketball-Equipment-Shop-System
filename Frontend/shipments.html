@@ -1,353 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shipments</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 24px;
-      background: #f5f5f5;
-      color: #222;
-    }
-
-    main { max-width: 1100px; margin: 0 auto; }
-    a { color: #a83d00; }
-
-    .panel {
-      margin-top: 20px;
-      padding: 20px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-    }
-
-    h2 { margin-top: 0; }
-
-    .form-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: flex-end;
-      margin-bottom: 12px;
-    }
-
-    .field { display: flex; flex-direction: column; }
-    label { margin-bottom: 4px; font-weight: bold; font-size: 14px; }
-
-    select, input {
-      padding: 8px;
-      font-size: 15px;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-    }
-
-    button {
-      padding: 8px 14px;
-      font-size: 14px;
-      cursor: pointer;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-      background: #fff;
-    }
-
-    button.primary { background: #ff6600; color: white; border: none; font-weight: bold; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; background: #fff; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
-    th { background: #f1f1f1; }
-
-    .status {
-      padding: 3px 7px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 12px;
-      text-transform: capitalize;
-    }
-
-    .pending { background: #e0e0e0; }
-    .shipped { background: #ffeaa7; }
-    .in_transit { background: #74b9ff; color: #fff; }
-    .delayed { background: #fab1a0; }
-    .delivered { background: #55efc4; }
-
-    .message { margin: 8px 0 0 0; color: #555; }
-    .error { color: #c0392b; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shipments - Basketball Shop</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main>
-    <a href="index.html">Back to Home</a>
 
-    <h1>Shipments</h1>
+    <!-- Global Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="brand">🏀 Basketball Shop</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Users & Roles</a></li>
+            <li><a href="md.html">Master Data</a></li>
+            <li><a href="orders.html">Shop Orders</a></li>
+            <li><a href="supplierOrders.html">Supplier Orders</a></li>
+            <li><a href="shipments.html" class="active">Shipments</a></li>
+        </ul>
+    </nav>
 
-    <section class="panel">
-      <h2>Record a Shipment</h2>
+    <main>
+        <h1>Shipments Management</h1>
 
-      <div class="form-row">
-        <div class="field">
-          <label for="orderSelect">Supplier Order</label>
-          <select id="orderSelect">
-            <option value="">Loading orders...</option>
-          </select>
-        </div>
+        <section class="panel">
+            <h2>Record a Shipment</h2>
 
-        <div class="field">
-          <label for="trackingInput">Tracking number</label>
-          <input type="text" id="trackingInput" placeholder="e.g. TRK-123456" />
-        </div>
+            <div class="form-row">
+                <div class="field">
+                    <label for="orderSelect">Supplier Order</label>
+                    <select id="orderSelect">
+                        <option value="">Loading orders...</option>
+                    </select>
+                </div>
 
-        <div class="field">
-          <label for="carrierInput">Carrier</label>
-          <input type="text" id="carrierInput" placeholder="e.g. LBC Express" />
-        </div>
+                <div class="field">
+                    <label for="trackingInput">Tracking Number</label>
+                    <input type="text" id="trackingInput" placeholder="e.g. TRK-123456" />
+                </div>
 
-        <div class="field">
-          <label for="statusSelect">Status</label>
-          <select id="statusSelect">
-            <option value="pending">pending</option>
-            <option value="shipped">shipped</option>
-            <option value="in_transit">in transit</option>
-            <option value="delayed">delayed</option>
-            <option value="delivered">delivered</option>
-          </select>
-        </div>
-      </div>
+                <div class="field">
+                    <label for="carrierInput">Carrier</label>
+                    <input type="text" id="carrierInput" placeholder="e.g. LBC Express" />
+                </div>
 
-      <button type="button" class="primary" id="createBtn">Record Shipment</button>
+                <div class="field">
+                    <label for="statusSelect">Status</label>
+                    <select id="statusSelect">
+                        <option value="pending">pending</option>
+                        <option value="shipped">shipped</option>
+                        <option value="in_transit">in transit</option>
+                        <option value="delayed">delayed</option>
+                        <option value="delivered">delivered</option>
+                    </select>
+                </div>
+            </div>
 
-      <p id="formStatus" class="message"></p>
-    </section>
+            <button type="button" class="primary" id="createBtn">Record Shipment</button>
+            <p id="formStatus" class="message"></p>
+        </section>
 
-    <section class="panel">
-      <h2>All Shipments</h2>
-      <p id="listStatus" class="message">Loading shipments...</p>
+        <section class="panel">
+            <h2>All Shipments</h2>
+            <p id="listStatus" class="message">Loading shipments...</p>
 
-      <table id="shipmentsTable">
-        <thead>
-          <tr>
-            <th>Shipment ID</th>
-            <th>Supplier Order</th>
-            <th>Supplier</th>
-            <th>Tracking Number</th>
-            <th>Carrier</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-  </main>
+            <table id="shipmentsTable">
+                <thead>
+                    <tr>
+                        <th>Shipment ID</th>
+                        <th>Supplier Order</th>
+                        <th>Supplier</th>
+                        <th>Tracking Number</th>
+                        <th>Carrier</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
 
-  <script>
-    const API = "/api/shipments";
+    <script src="config.js"></script>
+    <script>
+        const API = `${API_BASE_URL}/shipments`;
 
-    const orderSelect = document.getElementById("orderSelect");
-    const trackingInput = document.getElementById("trackingInput");
-    const carrierInput = document.getElementById("carrierInput");
-    const statusSelect = document.getElementById("statusSelect");
-    const createBtn = document.getElementById("createBtn");
-    const formStatus = document.getElementById("formStatus");
-    const listStatus = document.getElementById("listStatus");
-    const tbody = document.querySelector("#shipmentsTable tbody");
+        const orderSelect = document.getElementById("orderSelect");
+        const trackingInput = document.getElementById("trackingInput");
+        const carrierInput = document.getElementById("carrierInput");
+        const statusSelect = document.getElementById("statusSelect");
+        const createBtn = document.getElementById("createBtn");
+        const formStatus = document.getElementById("formStatus");
+        const listStatus = document.getElementById("listStatus");
+        const tbody = document.querySelector("#shipmentsTable tbody");
 
-    const STATUSES = ["pending", "shipped", "in_transit", "delayed", "delivered"];
+        const STATUSES = ["pending", "shipped", "in_transit", "delayed", "delivered"];
 
-    function showFormStatus(text, isError) {
-      formStatus.textContent = text;
-      formStatus.className = isError ? "message error" : "message";
-    }
-
-    function pretty(status) {
-      return String(status).replace(/_/g, " ");
-    }
-
-    // ---- Load supplier orders into the dropdown -------------------------
-
-    async function loadOrders() {
-      try {
-        const response = await fetch(API + "/orders");
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to load orders");
+        function showFormStatus(text, isError) {
+            formStatus.textContent = text;
+            formStatus.className = isError ? "message error" : "message success";
         }
 
-        // Only offer orders that do not have a shipment yet.
-        const available = result.data.filter(order => order.shipment_id === null);
-
-        orderSelect.replaceChildren();
-
-        if (available.length === 0) {
-          const option = document.createElement("option");
-          option.value = "";
-          option.textContent = "No orders available to ship";
-          orderSelect.appendChild(option);
-          return;
+        function pretty(status) {
+            return String(status).replace(/_/g, " ");
         }
 
-        const first = document.createElement("option");
-        first.value = "";
-        first.textContent = "Choose a supplier order";
-        orderSelect.appendChild(first);
+        async function loadOrders() {
+            try {
+                const response = await fetch(API + "/orders");
+                const result = await response.json();
 
-        available.forEach(order => {
-          const option = document.createElement("option");
-          option.value = order.supplier_order_id;
-          option.textContent =
-            "#" + order.supplier_order_id + " — " + order.supplier_name +
-            " (" + pretty(order.order_status) + ")";
-          orderSelect.appendChild(option);
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to load orders");
+                }
+
+                const available = result.data.filter(order => order.shipment_id === null);
+
+                orderSelect.replaceChildren();
+
+                if (available.length === 0) {
+                    const option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "No orders available to ship";
+                    orderSelect.appendChild(option);
+                    return;
+                }
+
+                const first = document.createElement("option");
+                first.value = "";
+                first.textContent = "Choose a supplier order";
+                orderSelect.appendChild(first);
+
+                available.forEach(order => {
+                    const option = document.createElement("option");
+                    option.value = order.supplier_order_id;
+                    option.textContent = `#${order.supplier_order_id} — ${order.supplier_name} (${pretty(order.order_status)})`;
+                    orderSelect.appendChild(option);
+                });
+            } catch (error) {
+                showFormStatus("Could not load orders: " + error.message, true);
+            }
+        }
+
+        async function createShipment() {
+            showFormStatus("");
+
+            if (!orderSelect.value) {
+                showFormStatus("Please choose a supplier order.", true);
+                return;
+            }
+
+            createBtn.disabled = true;
+
+            try {
+                const response = await fetch(API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        supplier_order_id: Number(orderSelect.value),
+                        tracking_number: trackingInput.value.trim() || null,
+                        carrier: carrierInput.value.trim() || null,
+                        shipment_status: statusSelect.value
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to record shipment");
+                }
+
+                showFormStatus("Shipment #" + result.shipmentId + " recorded.", false);
+
+                trackingInput.value = "";
+                carrierInput.value = "";
+                statusSelect.value = "pending";
+
+                loadOrders();
+                loadShipments();
+            } catch (error) {
+                showFormStatus(error.message, true);
+            } finally {
+                createBtn.disabled = false;
+            }
+        }
+
+        async function loadShipments() {
+            listStatus.textContent = "Loading shipments...";
+            listStatus.className = "message loading";
+
+            try {
+                const response = await fetch(API);
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to load shipments");
+                }
+
+                tbody.replaceChildren();
+
+                if (result.data.length === 0) {
+                    listStatus.textContent = "No shipments recorded yet.";
+                    listStatus.className = "message";
+                    return;
+                }
+
+                listStatus.textContent = result.data.length + " shipment(s) found.";
+                listStatus.className = "message success";
+
+                result.data.forEach(shipment => {
+                    const row = document.createElement("tr");
+
+                    const idCell = document.createElement("td");
+                    idCell.textContent = "#" + shipment.shipment_id;
+
+                    const orderCell = document.createElement("td");
+                    orderCell.textContent = "#" + shipment.supplier_order_id;
+
+                    const supplierCell = document.createElement("td");
+                    supplierCell.textContent = shipment.supplier_name || "";
+
+                    const trackingCell = document.createElement("td");
+                    trackingCell.textContent = shipment.tracking_number || "—";
+
+                    const carrierCell = document.createElement("td");
+                    carrierCell.textContent = shipment.carrier || "—";
+
+                    const statusCell = document.createElement("td");
+                    const tag = document.createElement("span");
+                    tag.className = "status-tag " + shipment.shipment_status;
+                    tag.textContent = pretty(shipment.shipment_status);
+                    statusCell.appendChild(tag);
+
+                    const actionsCell = document.createElement("td");
+
+                    STATUSES.filter(s => s !== shipment.shipment_status).forEach(status => {
+                        const btn = document.createElement("button");
+                        btn.textContent = pretty(status);
+                        btn.style.marginRight = "4px";
+                        btn.addEventListener("click", () => updateStatus(shipment.shipment_id, status));
+                        actionsCell.appendChild(btn);
+                    });
+
+                    row.append(idCell, orderCell, supplierCell, trackingCell, carrierCell, statusCell, actionsCell);
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                listStatus.textContent = "Could not load shipments: " + error.message;
+                listStatus.className = "message error";
+            }
+        }
+
+        async function updateStatus(shipmentId, status) {
+            try {
+                const response = await fetch(API + "/" + shipmentId + "/status", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ shipment_status: status })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to update status");
+                }
+
+                loadShipments();
+            } catch (error) {
+                listStatus.textContent = "Could not update status: " + error.message;
+                listStatus.className = "message error";
+            }
+        }
+
+        createBtn.addEventListener("click", createShipment);
+        window.addEventListener("DOMContentLoaded", () => {
+            loadOrders();
+            loadShipments();
         });
-      } catch (error) {
-        showFormStatus("Could not load orders: " + error.message, true);
-      }
-    }
-
-    // ---- Record a shipment ---------------------------------------------
-
-    async function createShipment() {
-      showFormStatus("");
-
-      if (!orderSelect.value) {
-        showFormStatus("Please choose a supplier order.", true);
-        return;
-      }
-
-      createBtn.disabled = true;
-
-      try {
-        const response = await fetch(API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            supplier_order_id: Number(orderSelect.value),
-            tracking_number: trackingInput.value.trim() || null,
-            carrier: carrierInput.value.trim() || null,
-            shipment_status: statusSelect.value
-          })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to record shipment");
-        }
-
-        showFormStatus("Shipment #" + result.shipmentId + " recorded.", false);
-
-        trackingInput.value = "";
-        carrierInput.value = "";
-        statusSelect.value = "pending";
-
-        loadOrders();
-        loadShipments();
-      } catch (error) {
-        showFormStatus(error.message, true);
-      } finally {
-        createBtn.disabled = false;
-      }
-    }
-
-    // ---- List shipments -------------------------------------------------
-
-    async function loadShipments() {
-      listStatus.textContent = "Loading shipments...";
-      listStatus.className = "message";
-
-      try {
-        const response = await fetch(API);
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to load shipments");
-        }
-
-        tbody.replaceChildren();
-
-        if (result.data.length === 0) {
-          listStatus.textContent = "No shipments recorded yet.";
-          return;
-        }
-
-        listStatus.textContent = result.data.length + " shipment(s) found.";
-
-        result.data.forEach(shipment => {
-          const row = document.createElement("tr");
-
-          const idCell = document.createElement("td");
-          idCell.textContent = "#" + shipment.shipment_id;
-
-          const orderCell = document.createElement("td");
-          orderCell.textContent = "#" + shipment.supplier_order_id;
-
-          const supplierCell = document.createElement("td");
-          supplierCell.textContent = shipment.supplier_name || "";
-
-          const trackingCell = document.createElement("td");
-          trackingCell.textContent = shipment.tracking_number || "—";
-
-          const carrierCell = document.createElement("td");
-          carrierCell.textContent = shipment.carrier || "—";
-
-          const statusCell = document.createElement("td");
-          const tag = document.createElement("span");
-          tag.className = "status " + shipment.shipment_status;
-          tag.textContent = pretty(shipment.shipment_status);
-          statusCell.appendChild(tag);
-
-          const actionsCell = document.createElement("td");
-
-          STATUSES.filter(s => s !== shipment.shipment_status).forEach(status => {
-            const btn = document.createElement("button");
-            btn.textContent = pretty(status);
-            btn.style.marginRight = "4px";
-            btn.addEventListener("click", () => updateStatus(shipment.shipment_id, status));
-            actionsCell.appendChild(btn);
-          });
-
-          row.append(idCell, orderCell, supplierCell, trackingCell, carrierCell, statusCell, actionsCell);
-          tbody.appendChild(row);
-        });
-      } catch (error) {
-        listStatus.textContent = "Could not load shipments: " + error.message;
-        listStatus.className = "message error";
-      }
-    }
-
-    // ---- Update a shipment's status -------------------------------------
-
-    async function updateStatus(shipmentId, status) {
-      try {
-        const response = await fetch(API + "/" + shipmentId + "/status", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shipment_status: status })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to update status");
-        }
-
-        loadShipments();
-      } catch (error) {
-        listStatus.textContent = "Could not update status: " + error.message;
-        listStatus.className = "message error";
-      }
-    }
-
-    // ---- Start ----------------------------------------------------------
-
-    createBtn.addEventListener("click", createShipment);
-
-    loadOrders();
-    loadShipments();
-  </script>
+    </script>
 </body>
 </html>
