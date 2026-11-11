@@ -3,6 +3,7 @@ const cors = require("cors");
 
 // Your database connection for Addresses, Suppliers, and Payments
 const db = require("./config/db");
+const pool = require("./db");
 
 // Group's User routes
 const userRoutes = require("./routes/userRoutes");
@@ -22,6 +23,7 @@ app.get("/test", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/supplier-orders", require("./routes/supplierOrderRoutes"));
 app.use("/api/shipments", require("./routes/shipmentRoutes"));
+app.use("/api/inventory", require("./routes/inventoryRoutes"));
 
 // ===============================
 // SUPPLIERS
