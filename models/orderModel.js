@@ -1,7 +1,7 @@
 const db = require('../db');
 
 const orderModel = {
-// Fetch all orders with customer information and item count
+  // Fetch all orders with customer information and item count
   async getAllOrders() {
     const query = `
       SELECT o.order_id, o.order_date, o.total_amount, o.order_status,
@@ -17,98 +17,128 @@ const orderModel = {
     return rows;
   },
 
-  // Fetch single order details
+  // Fetch a single order by ID with details
   async getOrderById(orderId) {
     const query = `
       SELECT o.order_id, o.order_date, o.total_amount, o.order_status,
-             u.full_name AS customer_name, u.email AS customer_email
+             COALESCE(NULLIF(u.full_name, ''), u.username, 'Customer') AS customer_name
       FROM orders o
       JOIN users u ON o.user_id = u.user_id
       WHERE o.order_id = ?
     `;
     const [rows] = await db.query(query, [orderId]);
-    return rows[0] || null;
+    return rows[0];
   },
 
-  // Atomic checkout: orders + order_items + stock deduction
+  // Atomic creation of multi-item order with inventory deduction
   async createOrder(userId, items) {
     const connection = await db.getConnection();
     try {
       await connection.beginTransaction();
 
-      let grandTotal = 0;
-      const validatedItems = [];
+      let calculatedTotal = 0;
+      const orderLines = [];
 
       for (const item of items) {
-        const targetId = item.equipment_id || item.product_id;
-        const [rows] = await connection.query(
-          'SELECT equipment_id, product_name, price, stock_quantity FROM equipment WHERE equipment_id = ? FOR UPDATE',
-          [targetId]
+        const [equipmentRows] = await connection.query(
+          'SELECT equipment_id, price, stock_quantity FROM equipment WHERE equipment_id = ? FOR UPDATE',
+          [item.equipment_id]
         );
 
-        if (rows.length === 0) {
-          throw new Error(`Equipment item #${targetId} not found.`);
+        if (equipmentRows.length === 0) {
+          throw new Error(`Equipment #${item.equipment_id} not found.`);
         }
 
-        const product = rows[0];
-        const qty = parseInt(item.quantity, 10);
+        const product = equipmentRows[0];
 
-        if (product.stock_quantity < qty) {
-          throw new Error(`Insufficient stock for "${product.product_name}". Only ${product.stock_quantity} available.`);
+        if (product.stock_quantity < item.quantity) {
+          throw new Error(`Insufficient stock for equipment #${item.equipment_id}. Available: ${product.stock_quantity}`);
         }
 
         const unitPrice = Number(product.price);
-        grandTotal += unitPrice * qty;
+        const subtotal = unitPrice * item.quantity;
+        calculatedTotal += subtotal;
 
-        validatedItems.push({
-          equipment_id: product.equipment_id,
-          quantity: qty,
-          unit_price: unitPrice
+        orderLines.push({
+          equipment_id: item.equipment_id,
+          quantity: item.quantity,
+          unit_price: unitPrice,
+          subtotal: subtotal
         });
       }
 
-      // Insert header
+      // 1. Insert order header
       const [orderResult] = await connection.query(
         'INSERT INTO orders (user_id, total_amount, order_status) VALUES (?, ?, ?)',
-        [userId, grandTotal.toFixed(2), 'completed']
+        [userId, calculatedTotal.toFixed(2), 'Completed']
       );
-      const newOrderId = orderResult.insertId;
 
-      // Insert line-items & deduct stock
-      for (const validItem of validatedItems) {
+      const orderId = orderResult.insertId;
+
+      // 2. Insert line items and update inventory
+      for (const line of orderLines) {
         await connection.query(
-          'INSERT INTO order_items (order_id, equipment_id, quantity, unit_price) VALUES (?, ?, ?, ?)',
-          [newOrderId, validItem.equipment_id, validItem.quantity, validItem.unit_price]
+          'INSERT INTO order_items (order_id, equipment_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)',
+          [orderId, line.equipment_id, line.quantity, line.unit_price, line.subtotal]
         );
 
         await connection.query(
           'UPDATE equipment SET stock_quantity = stock_quantity - ? WHERE equipment_id = ?',
-          [validItem.quantity, validItem.equipment_id]
+          [line.quantity, line.equipment_id]
         );
       }
 
       await connection.commit();
-      return { orderId: newOrderId, totalAmount: grandTotal.toFixed(2) };
-    } catch (error) {
+      return { order_id: orderId, total_amount: calculatedTotal.toFixed(2) };
+    } catch (err) {
       await connection.rollback();
-      throw error;
+      throw err;
     } finally {
       connection.release();
     }
   },
 
-  // Update order status (pending, completed, cancelled)
+  // Update order status
   async updateOrderStatus(orderId, status) {
     const query = 'UPDATE orders SET order_status = ? WHERE order_id = ?';
     const [result] = await db.query(query, [status, orderId]);
     return result;
   },
 
-  // Delete order
+  // Delete an order, restore equipment stock, and clean up line items
   async deleteOrder(orderId) {
-    const query = 'DELETE FROM orders WHERE order_id = ?';
-    const [result] = await db.query(query, [orderId]);
-    return result;
+    const connection = await db.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // 1. Get items from this order to restore inventory
+      const [items] = await connection.query(
+        'SELECT equipment_id, quantity FROM order_items WHERE order_id = ?',
+        [orderId]
+      );
+
+      // 2. Add stock back to equipment table
+      for (const item of items) {
+        await connection.query(
+          'UPDATE equipment SET stock_quantity = stock_quantity + ? WHERE equipment_id = ?',
+          [item.quantity, item.equipment_id]
+        );
+      }
+
+      // 3. Delete line items first to honor foreign keys
+      await connection.query('DELETE FROM order_items WHERE order_id = ?', [orderId]);
+
+      // 4. Delete the order header
+      const [result] = await connection.query('DELETE FROM orders WHERE order_id = ?', [orderId]);
+
+      await connection.commit();
+      return result.affectedRows > 0;
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
   }
 };
 
