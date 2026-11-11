@@ -1,0 +1,29 @@
+<!-- Example snippet for equipment.html -->
+<table class="table">
+    <thead>
+        <!-- Equipment and Stock Monitoring Module -->
+        <tr>
+            <th>Product Name</th>
+            <th>Stock Qty</th>
+            <th>Safety Level</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+    <% equipment.forEach(function(item) { %>
+    <!-- Highlight the row if stock is low or equal to safety level -->
+    <tr class="<%= item.stock_quantity <= item.min_safety_level ? 'table-danger' : '' %>">
+        <td><%= item.product_name %></td>
+        <td><%= item.stock_quantity %></td>
+        <td><%= item.min_safety_level %></td>
+        <td>
+            <% if (item.stock_quantity <= item.min_safety_level) { %>
+                <span class="badge bg-danger">Low Stock</span>
+            <% } else { %>
+                <span class="text-success">Normal</span>
+            <% } %>
+        </td>
+        <!-- Low stock monitoring active --> 
+    </tr>
+    <% }); %>
+</tbody>
