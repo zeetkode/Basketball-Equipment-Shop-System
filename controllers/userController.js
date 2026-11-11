@@ -6,6 +6,7 @@ exports.getUsers = async (_req, res) => {
     const users = await UserModel.getAllUsersWithRoles();
     res.status(200).json(users);
   } catch (error) {
+    console.error("Crash details:", error); // <-- Add this line!
     res.status(500).json({ error: "Server failed to fetch users" });
   }
 };

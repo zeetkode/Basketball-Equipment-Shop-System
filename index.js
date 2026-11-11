@@ -12,7 +12,7 @@ const userRoutes = require("./routes/userRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -153,3 +153,7 @@ pool
   .query("SELECT 1")
   .then(() => console.log("Database connected successfully!"))
   .catch((err) => console.error("Group database connection failed:", err));
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});

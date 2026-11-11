@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Basketball Shop</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Global Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="brand">🏀 Basketball Shop</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Users & Roles</a></li>
+            <li><a href="md.html">Master Data</a></li>
+            <li><a href="equipment.html">Equipment & Stock</a></li>
+            <li><a href="orders.html">Shop Orders</a></li>
+            <li><a href="supplierOrders.html">Supplier Orders</a></li>
+            <li><a href="shipments.html">Shipments</a></li>
+            <li><a href="reports.html" class="active">Reports</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Admin Dashboard - Advanced Reports</h1>
+
+        <!-- 1. INNER JOIN REPORT -->
+        <section class="panel">
+            <h2>1. Sales by Category and Brand (INNER JOIN)</h2>
+            <p id="inner-status" class="message loading">Loading report...</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Brand</th>
+                        <th>Category</th>
+                        <th>Total Sold (Qty)</th>
+                    </tr>
+                </thead>
+                <tbody id="inner-join-data">
+                    <!-- Dynamically populated -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 2. LEFT JOIN REPORT -->
+        <section class="panel">
+            <h2>2. Inactive Customers & Unsold Products (LEFT JOIN)</h2>
+            
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Inactive Customers</h3>
+                    <p id="left-customers-status" class="message loading">Loading...</p>
+                    <table>
+                        <thead>
+                            <tr><th>Customer Name</th></tr>
+                        </thead>
+                        <tbody id="left-join-customers-data">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Unsold Products</h3>
+                    <p id="left-products-status" class="message loading">Loading...</p>
+                    <table>
+                        <thead>
+                            <tr><th>Product Name</th></tr>
+                        </thead>
+                        <tbody id="left-join-products-data">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. FULL OUTER JOIN REPORT -->
+        <section class="panel">
+            <h2>3. Inventory vs Supplier Supply (FULL OUTER JOIN)</h2>
+            <p id="outer-status" class="message loading">Loading report...</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Store Stock</th>
+                        <th>Pending Supplier Orders</th>
+                    </tr>
+                </thead>
+                <tbody id="full-outer-join-data">
+                    <!-- Dynamically populated -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Centralized Scripts -->
+    <script src="config.js"></script>
+    <script>
+        const REPORTS_API = `${API_BASE_URL}/reports`;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // 1. Fetch INNER JOIN
+            fetch(`${REPORTS_API}/inner-join`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to load inner join data');
+                    return res.json();
+                })
+                .then(data => {
+                    setStatusMessage('inner-status', 'Data loaded successfully.', false);
+                    renderListOptimized(
+                        'inner-join-data', 
+                        data, 
+                        row => `<tr><td><strong>${row.brand}</strong></td><td>${row.category}</td><td>${row.total_sold}</td></tr>`,
+                        'No sales data available yet.'
+                    );
+                }).catch(err => setStatusMessage('inner-status', err.message, true));
+
+            // 2. Fetch LEFT JOIN - Customers
+            fetch(`${REPORTS_API}/left-join-customers`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to load customers');
+                    return res.json();
+                })
+                .then(data => {
+                    setStatusMessage('left-customers-status', '', false);
+                    renderListOptimized(
+                        'left-join-customers-data', 
+                        data, 
+                        row => `<tr><td>${row.customer_name}</td></tr>`,
+                        'All customers have made purchases.'
+                    );
+                }).catch(err => setStatusMessage('left-customers-status', err.message, true));
+
+            // 2b. Fetch LEFT JOIN - Products
+            fetch(`${REPORTS_API}/left-join-products`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to load products');
+                    return res.json();
+                })
+                .then(data => {
+                    setStatusMessage('left-products-status', '', false);
+                    renderListOptimized(
+                        'left-join-products-data', 
+                        data, 
+                        row => `<tr><td>${row.product_name}</td></tr>`,
+                        'All products have been sold at least once.'
+                    );
+                }).catch(err => setStatusMessage('left-products-status', err.message, true));
+
+            // 3. Fetch FULL OUTER JOIN
+            fetch(`${REPORTS_API}/full-outer-join`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to load supply data');
+                    return res.json();
+                })
+                .then(data => {
+                    setStatusMessage('outer-status', 'Data loaded successfully.', false);
+                    renderListOptimized(
+                        'full-outer-join-data', 
+                        data, 
+                        row => `
+                            <tr>
+                                <td><strong>${row.product_name}</strong></td>
+                                <td>${row.store_stock || 0}</td>
+                                <td><span class="status-tag pending">${row.pending_supply || 0}</span></td>
+                            </tr>
+                        `,
+                        'No inventory or supply data available.'
+                    );
+                }).catch(err => setStatusMessage('outer-status', err.message, true));
+        });
+    </script>
+</body>
+</html>
