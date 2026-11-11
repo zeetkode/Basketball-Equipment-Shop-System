@@ -29,6 +29,7 @@ app.get("/test", (req, res) => {
 // Mount Modular API Routes
 app.use("/api", masterDataRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/reports", require("./routes/reports"));
 app.use("/api/users", userRoutes);
 app.use("/api/supplier-orders", require("./routes/supplierOrderRoutes"));
 app.use("/api/shipments", require("./routes/shipmentRoutes"));
