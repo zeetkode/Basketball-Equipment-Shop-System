@@ -43,7 +43,8 @@ INSERT INTO categories (id, name) VALUES
 (1, 'Basketballs'),
 (2, 'Footwear'),
 (3, 'Apparel'),
-(4, 'Accessories');
+(4, 'Accessories'),
+(5, 'Training Gear');
 
 CREATE TABLE brands (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,7 +56,8 @@ INSERT INTO brands (id, name) VALUES
 (2, 'Adidas'),
 (3, 'Wilson'),
 (4, 'Spalding'),
-(5, 'Under Armour');
+(5, 'Under Armour'),
+(6, 'Jordan');
 
 CREATE TABLE equipment (
     equipment_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -75,11 +77,20 @@ CREATE TABLE equipment (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-INSERT INTO equipment (equipment_id, product_name, sku, price, category_id, brand_id, stock_quantity) VALUES
-(1, 'Evolution Game Basketball', 'BALL-WIL-001', 74.95, 1, 3, 12),
-(2, 'Street Outdoor Basketball', 'BALL-SPA-001', 34.99, 1, 4, 18),
-(3, 'Air Basketball Shoes', 'SHOE-NIK-001', 129.99, 2, 1, 8),
-(4, 'Pro Reversible Jersey', 'APP-ADI-001', 29.50, 3, 2, 25);
+INSERT INTO equipment (equipment_id, product_name, sku, price, category_id, brand_id, stock_quantity, min_safety_level) VALUES
+(1, 'Evolution Game Basketball', 'BALL-WIL-001', 74.95, 1, 3, 12, 5),
+(2, 'Street Outdoor Basketball', 'BALL-SPA-001', 34.99, 1, 4, 18, 5),
+(3, 'Air Basketball Shoes', 'SHOE-NIK-001', 129.99, 2, 1, 8, 5),
+(4, 'Pro Reversible Jersey', 'APP-ADI-001', 29.50, 3, 2, 25, 5),
+(5, 'Nike LeBron 21 Men''s Shoes', 'SHOE-NIK-002', 200.00, 2, 1, 24, 5),
+(6, 'Jordan Luka 2 Basketball Shoes', 'SHOE-JOR-001', 130.00, 2, 6, 15, 5),
+(7, 'Spalding TF-1000 Legacy Basketball', 'BALL-SPA-002', 74.99, 1, 4, 25, 8),
+(8, 'Nike Elite Crew Basketball Socks', 'ACC-NIK-001', 14.00, 4, 1, 120, 20),
+(9, 'Under Armour Curry Splash Shorts', 'APP-UA-001', 45.00, 3, 5, 30, 5),
+(10, 'Wilson NBA Official Game Ball', 'BALL-WIL-002', 199.95, 1, 3, 8, 3),
+(11, 'Nike Hoops Elite Pro Backpack', 'ACC-NIK-002', 85.00, 4, 1, 12, 4),
+(12, 'Agility Ladder & Cones Set', 'TRN-GEN-001', 35.50, 5, 1, 20, 5),
+(13, 'Spalding Breakaway Rim', 'TRN-SPA-001', 150.00, 5, 4, 6, 2);
 
 CREATE TABLE inventory (
     inventory_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -175,3 +186,42 @@ CREATE TABLE shipments (
         FOREIGN KEY (supplier_order_id) REFERENCES supplier_orders(supplier_order_id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
+
+-- 1. Create the Supplier Orders (Headers)
+INSERT INTO supplier_orders (supplier_id, order_date, expected_date, order_status) VALUES
+(1, '2026-11-01 09:00:00', '2026-11-15', 'received'),
+(2, '2026-11-10 14:30:00', '2026-11-20', 'placed'),
+(1, '2026-11-12 08:15:00', '2026-11-30', 'draft');
+
+-- 2. Add the specific Equipment Items to those Orders
+INSERT INTO supplier_order_items (supplier_order_id, equipment_id, quantity) VALUES
+-- Order 1 (Received from Sports Central): 20 LeBron Shoes & 50 Elite Socks
+(1, 5, 20),
+(1, 8, 50),
+
+-- Order 2 (Placed with Pro Court): 30 Evolution Game Basketballs
+(2, 1, 30),
+
+-- Order 3 (Draft for Sports Central): 10 Spalding Breakaway Rims
+(3, 13, 10);
+
+-- 1. Ensure the necessary Categories exist
+INSERT IGNORE INTO categories (id, name) VALUES 
+(1, 'Basketballs'), (2, 'Footwear'), (3, 'Apparel'), (4, 'Accessories'), (5, 'Training Gear');
+
+-- 2. Ensure the necessary Brands exist
+INSERT IGNORE INTO brands (id, name) VALUES 
+(1, 'Nike'), (2, 'Adidas'), (3, 'Wilson'), (4, 'Spalding'), (5, 'Under Armour'), (6, 'Jordan');
+
+-- 3. Insert the Equipment list for the dropdown
+INSERT INTO equipment (product_name, sku, price, category_id, brand_id, stock_quantity) VALUES
+('Wilson Evolution Indoor Game Basketball', 'BALL-WIL-101', 79.95, 1, 3, 50),
+('Nike LeBron 21 Basketball Shoes', 'SHOE-NIK-102', 200.00, 2, 1, 20),
+('Spalding TF-1000 Legacy Basketball', 'BALL-SPA-103', 74.99, 1, 4, 35),
+('Jordan Luka 2 Men''s Shoes', 'SHOE-JOR-104', 130.00, 2, 6, 15),
+('Under Armour Curry Splash Shorts', 'APP-UA-105', 45.00, 3, 5, 40),
+('Nike Elite Crew Socks (White/Black)', 'ACC-NIK-106', 14.00, 4, 1, 100),
+('Adidas Trae Unlimited Basketball Shoes', 'SHOE-ADI-107', 90.00, 2, 2, 25),
+('Spalding Heavyweight Training Ball', 'TRN-SPA-108', 49.99, 5, 4, 10),
+('Nike Hoops Elite Pro Backpack', 'ACC-NIK-109', 85.00, 4, 1, 12),
+('Wilson NBA Official Game Ball', 'BALL-WIL-110', 199.95, 1, 3, 5);
