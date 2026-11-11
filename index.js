@@ -7,28 +7,21 @@ const db = require("./config/db");
 // Group's User routes
 const userRoutes = require("./routes/userRoutes");
 
-// Group's database connection
-const pool = require("./db");
-
 const app = express();
 const PORT = 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Allows Express to read JSON body
 
-// Home route
-app.get("/", (req, res) => {
-    res.send("Basketball Equipment Shop API is running!");
-});
-
-// Group's test route
 app.get("/test", (req, res) => {
     res.json({ message: "The server is alive!" });
 });
 
-// Group's User routes
+// Connect routes
 app.use("/api/users", userRoutes);
+app.use("/api/supplier-orders", require("./routes/supplierOrderRoutes"));
+app.use("/api/shipments", require("./routes/shipmentRoutes"));
 
 // ===============================
 // SUPPLIERS
