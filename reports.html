@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Reports</title>
+    <!-- Assuming your style.css is in the Frontend folder, adjust if needed -->
+    <link rel="stylesheet" href="style.css"> 
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        h2 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard - Advanced Reports</h1>
+
+    <h2>1. Sales by Category and Brand (INNER JOIN)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Total Sold (Qty)</th>
+            </tr>
+        </thead>
+        <tbody id="inner-join-data"></tbody>
+    </table>
+
+    <h2>2. Inactive Customers & Unsold Products (LEFT JOIN)</h2>
+    <h3>Inactive Customers</h3>
+    <table>
+        <thead>
+            <tr><th>Customer Name</th></tr>
+        </thead>
+        <tbody id="left-join-customers-data"></tbody>
+    </table>
+    <h3>Unsold Products</h3>
+    <table>
+        <thead>
+            <tr><th>Product Name</th></tr>
+        </thead>
+        <tbody id="left-join-products-data"></tbody>
+    </table>
+
+    <h2>3. Inventory vs Supplier Supply (FULL OUTER JOIN)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Store Stock</th>
+                <th>Pending Supplier Orders</th>
+            </tr>
+        </thead>
+        <tbody id="full-outer-join-data"></tbody>
+    </table>
+
+    <script>
+        // Fetch data when page loads
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Fetch INNER JOIN
+            fetch('/api/reports/inner-join')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('inner-join-data');
+                    data.forEach(row => {
+                        tbody.innerHTML += `<tr><td>${row.brand}</td><td>${row.category}</td><td>${row.total_sold}</td></tr>`;
+                    });
+                }).catch(err => console.error(err));
+
+            // 2. Fetch LEFT JOIN - Customers
+            fetch('/api/reports/left-join-customers')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('left-join-customers-data');
+                    data.forEach(row => {
+                        tbody.innerHTML += `<tr><td>${row.customer_name}</td></tr>`;
+                    });
+                }).catch(err => console.error(err));
+
+            // 2b. Fetch LEFT JOIN - Products
+            fetch('/api/reports/left-join-products')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('left-join-products-data');
+                    data.forEach(row => {
+                        tbody.innerHTML += `<tr><td>${row.product_name}</td></tr>`;
+                    });
+                }).catch(err => console.error(err));
+
+            // 3. Fetch FULL OUTER JOIN
+            fetch('/api/reports/full-outer-join')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('full-outer-join-data');
+                    data.forEach(row => {
+                        tbody.innerHTML += `<tr><td>${row.product_name}</td><td>${row.store_stock}</td><td>${row.pending_supply}</td></tr>`;
+                    });
+                }).catch(err => console.error(err));
+        });
+    </script>
+</body>
+</html>
