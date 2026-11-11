@@ -40,6 +40,11 @@ const orderModel = {
       const orderLines = [];
 
       for (const item of items) {
+        const requestedQty = Number(item.quantity);
+        if (!Number.isInteger(requestedQty) || requestedQty <= 0) {
+          throw new Error(`Invalid quantity supplied for equipment #${item.equipment_id}.`);
+        }
+
         const [equipmentRows] = await connection.query(
           'SELECT equipment_id, price, stock_quantity FROM equipment WHERE equipment_id = ? FOR UPDATE',
           [item.equipment_id]
@@ -50,32 +55,31 @@ const orderModel = {
         }
 
         const product = equipmentRows[0];
-
-        if (product.stock_quantity < item.quantity) {
+        if (product.stock_quantity < requestedQty) {
           throw new Error(`Insufficient stock for equipment #${item.equipment_id}. Available: ${product.stock_quantity}`);
         }
 
         const unitPrice = Number(product.price);
-        const subtotal = unitPrice * item.quantity;
+        const subtotal = unitPrice * requestedQty;
         calculatedTotal += subtotal;
 
         orderLines.push({
           equipment_id: item.equipment_id,
-          quantity: item.quantity,
+          quantity: requestedQty,
           unit_price: unitPrice,
           subtotal: subtotal
         });
       }
 
-      // 1. Insert order header
+      // Insert order header
       const [orderResult] = await connection.query(
         'INSERT INTO orders (user_id, total_amount, order_status) VALUES (?, ?, ?)',
-        [userId, calculatedTotal.toFixed(2), 'Completed']
+        [userId, Number(calculatedTotal).toFixed(2), 'Completed']
       );
 
       const orderId = orderResult.insertId;
 
-      // 2. Insert line items and update inventory
+      // Insert line items and update inventory
       for (const line of orderLines) {
         await connection.query(
           'INSERT INTO order_items (order_id, equipment_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)',
@@ -89,7 +93,7 @@ const orderModel = {
       }
 
       await connection.commit();
-      return { order_id: orderId, total_amount: calculatedTotal.toFixed(2) };
+      return { order_id: orderId, total_amount: Number(calculatedTotal).toFixed(2) };
     } catch (err) {
       await connection.rollback();
       throw err;
@@ -111,13 +115,11 @@ const orderModel = {
     try {
       await connection.beginTransaction();
 
-      // 1. Get items from this order to restore inventory
       const [items] = await connection.query(
         'SELECT equipment_id, quantity FROM order_items WHERE order_id = ?',
         [orderId]
       );
 
-      // 2. Add stock back to equipment table
       for (const item of items) {
         await connection.query(
           'UPDATE equipment SET stock_quantity = stock_quantity + ? WHERE equipment_id = ?',
@@ -125,10 +127,7 @@ const orderModel = {
         );
       }
 
-      // 3. Delete line items first to honor foreign keys
       await connection.query('DELETE FROM order_items WHERE order_id = ?', [orderId]);
-
-      // 4. Delete the order header
       const [result] = await connection.query('DELETE FROM orders WHERE order_id = ?', [orderId]);
 
       await connection.commit();

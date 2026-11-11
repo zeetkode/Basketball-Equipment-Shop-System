@@ -8,7 +8,6 @@
 </head>
 <body>
 
-  <!-- Navigation Bar -->
   <nav class="navbar">
     <a href="index.html" class="brand">🏀 Basketball Shop</a>
     <ul class="nav-links">
@@ -23,26 +22,23 @@
   <main>
     <h1>Shop Orders & Checkout Processing</h1>
 
-    <!-- Multi-Item Shopping Cart Panel -->
     <section class="panel">
       <h2>Transaction Checkout Form</h2>
       <p id="checkout-status" class="message"></p>
 
-      <!-- Customer Name Input -->
       <div class="form-row">
         <div class="field">
           <label for="customer_name_input">Customer Name</label>
-          <input 
-            type="text" 
-            id="customer_name_input" 
-            placeholder="Type any customer name (e.g., Decy, Michael Jordan)..." 
+          <input
+            type="text"
+            id="customer_name_input"
+            placeholder="Type any customer name (e.g., Decy, Michael Jordan)..."
             autocomplete="off"
-            required 
+            required
           />
         </div>
       </div>
 
-      <!-- Add Line Item Row -->
       <div class="form-row">
         <div class="field" style="flex: 2;">
           <label for="equipment_select">Select Equipment Item</label>
@@ -61,7 +57,6 @@
         </div>
       </div>
 
-      <!-- Cart Line-Items Table -->
       <h3>Current Cart Items</h3>
       <table>
         <thead>
@@ -73,19 +68,15 @@
             <th style="width: 80px;">Action</th>
           </tr>
         </thead>
-        <tbody id="cartTableBody">
-          <!-- Dynamically populated -->
-        </tbody>
+        <tbody id="cartTableBody"></tbody>
       </table>
 
-      <!-- Grand Total Summary & Checkout Button -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
         <h3 style="margin: 0;">Grand Total: <span id="grandTotalDisplay" style="color: var(--primary-color);">$0.00</span></h3>
         <button type="button" class="primary" id="checkoutBtn" disabled>Place Order & Save to Database</button>
       </div>
     </section>
 
-    <!-- Recent Orders JOIN Report Panel with Delete Column -->
     <section class="panel">
       <h2>Recent Processed Orders (JOIN Report)</h2>
       <p id="orders-status" class="message loading">Loading orders...</p>
@@ -102,9 +93,7 @@
             <th style="width: 90px;">Action</th>
           </tr>
         </thead>
-        <tbody id="ordersTableBody">
-          <!-- Dynamically populated -->
-        </tbody>
+        <tbody id="ordersTableBody"></tbody>
       </table>
     </section>
   </main>
@@ -118,7 +107,6 @@
     const ORDERS_API = `${API_BASE_URL}/orders`;
     const EQUIPMENT_API = `${API_BASE_URL}/orders/equipment`;
 
-    // 1. Load Equipment Catalog with Live Stock
     async function loadCatalog() {
       const select = document.getElementById('equipment_select');
       try {
@@ -141,7 +129,6 @@
       }
     }
 
-    // 2. Load Recent Orders with Delete Button
     async function loadOrders() {
       const statusEl = document.getElementById('orders-status');
       statusEl.textContent = 'Loading orders...';
@@ -178,17 +165,13 @@
       }
     }
 
-    // 3. Delete Order and Restock Inventory
     window.deleteOrder = async (orderId) => {
       if (!confirm(`Are you sure you want to delete Order #${orderId}? Its items will be returned to stock.`)) {
         return;
       }
 
       try {
-        const response = await fetch(`${ORDERS_API}/${orderId}`, {
-          method: 'DELETE'
-        });
-
+        const response = await fetch(`${ORDERS_API}/${orderId}`, { method: 'DELETE' });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Failed to delete order.');
 
@@ -200,7 +183,6 @@
       }
     };
 
-    // 4. Render Cart Table
     function renderCart() {
       const container = document.getElementById('cartTableBody');
       const checkoutBtn = document.getElementById('checkoutBtn');
@@ -223,8 +205,7 @@
           <tr>
             <td><strong>${item.product_name}</strong></td>
             <td>
-              <input type="number" min="1" max="${item.stock_quantity}" value="${item.quantity}" 
-                     style="width: 70px;" onchange="updateCartQuantity(${index}, this.value)" />
+              <input type="number" min="1" max="${item.stock_quantity}" value="${item.quantity}" style="width: 70px;" onchange="updateCartQuantity(${index}, this.value)" />
             </td>
             <td>$${item.price.toFixed(2)}</td>
             <td><strong>$${subtotal.toFixed(2)}</strong></td>
@@ -239,7 +220,6 @@
       checkoutBtn.disabled = false;
     }
 
-    // 5. Add to Cart Handler
     document.getElementById('addCartBtn').addEventListener('click', () => {
       const select = document.getElementById('equipment_select');
       const equipmentId = parseInt(select.value, 10);
@@ -292,15 +272,14 @@
       renderCart();
     };
 
-    // 6. User Resolver
     async function resolveUserId(enteredName) {
       const trimmed = enteredName.trim();
-      
+
       try {
         const res = await fetch(USERS_API);
         if (res.ok) {
           const users = await res.json();
-          const existing = users.find(u => 
+          const existing = users.find(u =>
             (u.full_name && u.full_name.trim().toLowerCase() === trimmed.toLowerCase()) ||
             (u.username && u.username.trim().toLowerCase() === trimmed.toLowerCase())
           );
@@ -321,10 +300,14 @@
           })
         });
 
+        if (!createRes.ok) {
+          throw new Error('Could not create customer account.');
+        }
+
         const res = await fetch(USERS_API);
         if (res.ok) {
           const users = await res.json();
-          const created = users.find(u => u.username.toLowerCase() === trimmed.toLowerCase());
+          const created = users.find(u => u.username && u.username.toLowerCase() === trimmed.toLowerCase());
           if (created) return created.user_id;
         }
       } catch (err) {
@@ -334,7 +317,6 @@
       return 2;
     }
 
-    // 7. Checkout Submit
     document.getElementById('checkoutBtn').addEventListener('click', async () => {
       const customerName = document.getElementById('customer_name_input').value.trim();
       const checkoutBtn = document.getElementById('checkoutBtn');
@@ -374,7 +356,6 @@
       }
     });
 
-    // Initialize
     window.addEventListener('DOMContentLoaded', () => {
       loadCatalog();
       loadOrders();

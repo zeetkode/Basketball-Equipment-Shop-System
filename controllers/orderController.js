@@ -36,8 +36,8 @@ const orderController = {
       const result = await orderModel.createOrder(user_id, items);
       res.status(201).json({
         message: 'Order processed and saved to database successfully!',
-        order_id: result.orderId,
-        total_amount: result.totalAmount
+        order_id: result.order_id,
+        total_amount: result.total_amount
       });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -63,7 +63,10 @@ const orderController = {
   async deleteOrder(req, res) {
     try {
       const { id } = req.params;
-      await orderModel.deleteOrder(id);
+      const deleted = await orderModel.deleteOrder(id);
+      if (!deleted) {
+        return res.status(404).json({ error: `Order #${id} not found.` });
+      }
       res.json({ message: `Order #${id} deleted successfully.` });
     } catch (err) {
       res.status(500).json({ error: err.message });
