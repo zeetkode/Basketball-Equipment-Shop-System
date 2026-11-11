@@ -67,6 +67,7 @@ CREATE TABLE equipment (
     category_id INT NOT NULL,
     brand_id INT NOT NULL,
     stock_quantity INT NOT NULL DEFAULT 0,
+    min_safety_level INT NOT NULL DEFAULT 5,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_equipment_category
         FOREIGN KEY (category_id) REFERENCES categories(id)
