@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shipments - Basketball Shop</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+    <!-- Global Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="brand">🏀 Basketball Shop</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Users & Roles</a></li>
+            <li><a href="md.html">Master Data</a></li>
+            <li><a href="orders.html">Shop Orders</a></li>
+            <li><a href="supplierOrders.html">Supplier Orders</a></li>
+            <li><a href="shipments.html" class="active">Shipments</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Shipments Management</h1>
+
+        <section class="panel">
+            <h2>Record a Shipment</h2>
+
+            <div class="form-row">
+                <div class="field">
+                    <label for="orderSelect">Supplier Order</label>
+                    <select id="orderSelect">
+                        <option value="">Loading orders...</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="trackingInput">Tracking Number</label>
+                    <input type="text" id="trackingInput" placeholder="e.g. TRK-123456" />
+                </div>
+
+                <div class="field">
+                    <label for="carrierInput">Carrier</label>
+                    <input type="text" id="carrierInput" placeholder="e.g. LBC Express" />
+                </div>
+
+                <div class="field">
+                    <label for="statusSelect">Status</label>
+                    <select id="statusSelect">
+                        <option value="pending">pending</option>
+                        <option value="shipped">shipped</option>
+                        <option value="in_transit">in transit</option>
+                        <option value="delayed">delayed</option>
+                        <option value="delivered">delivered</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="button" class="primary" id="createBtn">Record Shipment</button>
+            <p id="formStatus" class="message"></p>
+        </section>
+
+        <section class="panel">
+            <h2>All Shipments</h2>
+            <p id="listStatus" class="message">Loading shipments...</p>
+
+            <table id="shipmentsTable">
+                <thead>
+                    <tr>
+                        <th>Shipment ID</th>
+                        <th>Supplier Order</th>
+                        <th>Supplier</th>
+                        <th>Tracking Number</th>
+                        <th>Carrier</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script>
+        const API = `${API_BASE_URL}/shipments`;
+
+        const orderSelect = document.getElementById("orderSelect");
+        const trackingInput = document.getElementById("trackingInput");
+        const carrierInput = document.getElementById("carrierInput");
+        const statusSelect = document.getElementById("statusSelect");
+        const createBtn = document.getElementById("createBtn");
+        const formStatus = document.getElementById("formStatus");
+        const listStatus = document.getElementById("listStatus");
+        const tbody = document.querySelector("#shipmentsTable tbody");
+
+        const STATUSES = ["pending", "shipped", "in_transit", "delayed", "delivered"];
+
+        function showFormStatus(text, isError) {
+            formStatus.textContent = text;
+            formStatus.className = isError ? "message error" : "message success";
+        }
+
+        function pretty(status) {
+            return String(status).replace(/_/g, " ");
+        }
+
+        async function loadOrders() {
+            try {
+                const response = await fetch(API + "/orders");
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to load orders");
+                }
+
+                const available = result.data.filter(order => order.shipment_id === null);
+
+                orderSelect.replaceChildren();
+
+                if (available.length === 0) {
+                    const option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "No orders available to ship";
+                    orderSelect.appendChild(option);
+                    return;
+                }
+
+                const first = document.createElement("option");
+                first.value = "";
+                first.textContent = "Choose a supplier order";
+                orderSelect.appendChild(first);
+
+                available.forEach(order => {
+                    const option = document.createElement("option");
+                    option.value = order.supplier_order_id;
+                    option.textContent = `#${order.supplier_order_id} — ${order.supplier_name} (${pretty(order.order_status)})`;
+                    orderSelect.appendChild(option);
+                });
+            } catch (error) {
+                showFormStatus("Could not load orders: " + error.message, true);
+            }
+        }
+
+        async function createShipment() {
+            showFormStatus("");
+
+            if (!orderSelect.value) {
+                showFormStatus("Please choose a supplier order.", true);
+                return;
+            }
+
+            createBtn.disabled = true;
+
+            try {
+                const response = await fetch(API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        supplier_order_id: Number(orderSelect.value),
+                        tracking_number: trackingInput.value.trim() || null,
+                        carrier: carrierInput.value.trim() || null,
+                        shipment_status: statusSelect.value
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to record shipment");
+                }
+
+                showFormStatus("Shipment #" + result.shipmentId + " recorded.", false);
+
+                trackingInput.value = "";
+                carrierInput.value = "";
+                statusSelect.value = "pending";
+
+                loadOrders();
+                loadShipments();
+            } catch (error) {
+                showFormStatus(error.message, true);
+            } finally {
+                createBtn.disabled = false;
+            }
+        }
+
+        async function loadShipments() {
+            listStatus.textContent = "Loading shipments...";
+            listStatus.className = "message loading";
+
+            try {
+                const response = await fetch(API);
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to load shipments");
+                }
+
+                tbody.replaceChildren();
+
+                if (result.data.length === 0) {
+                    listStatus.textContent = "No shipments recorded yet.";
+                    listStatus.className = "message";
+                    return;
+                }
+
+                listStatus.textContent = result.data.length + " shipment(s) found.";
+                listStatus.className = "message success";
+
+                result.data.forEach(shipment => {
+                    const row = document.createElement("tr");
+
+                    const idCell = document.createElement("td");
+                    idCell.textContent = "#" + shipment.shipment_id;
+
+                    const orderCell = document.createElement("td");
+                    orderCell.textContent = "#" + shipment.supplier_order_id;
+
+                    const supplierCell = document.createElement("td");
+                    supplierCell.textContent = shipment.supplier_name || "";
+
+                    const trackingCell = document.createElement("td");
+                    trackingCell.textContent = shipment.tracking_number || "—";
+
+                    const carrierCell = document.createElement("td");
+                    carrierCell.textContent = shipment.carrier || "—";
+
+                    const statusCell = document.createElement("td");
+                    const tag = document.createElement("span");
+                    tag.className = "status-tag " + shipment.shipment_status;
+                    tag.textContent = pretty(shipment.shipment_status);
+                    statusCell.appendChild(tag);
+
+                    const actionsCell = document.createElement("td");
+
+                    STATUSES.filter(s => s !== shipment.shipment_status).forEach(status => {
+                        const btn = document.createElement("button");
+                        btn.textContent = pretty(status);
+                        btn.style.marginRight = "4px";
+                        btn.addEventListener("click", () => updateStatus(shipment.shipment_id, status));
+                        actionsCell.appendChild(btn);
+                    });
+
+                    row.append(idCell, orderCell, supplierCell, trackingCell, carrierCell, statusCell, actionsCell);
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                listStatus.textContent = "Could not load shipments: " + error.message;
+                listStatus.className = "message error";
+            }
+        }
+
+        async function updateStatus(shipmentId, status) {
+            try {
+                const response = await fetch(API + "/" + shipmentId + "/status", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ shipment_status: status })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Failed to update status");
+                }
+
+                loadShipments();
+            } catch (error) {
+                listStatus.textContent = "Could not update status: " + error.message;
+                listStatus.className = "message error";
+            }
+        }
+
+        createBtn.addEventListener("click", createShipment);
+        window.addEventListener("DOMContentLoaded", () => {
+            loadOrders();
+            loadShipments();
+        });
+    </script>
+</body>
+</html>
