@@ -25,10 +25,8 @@ const getLeftJoinCustomers = async () => {
 
 const getLeftJoinProducts = async () => {
     const query = `
-        SELECT e.product_name
-        FROM equipment e
-        LEFT JOIN order_items oi ON e.equipment_id = oi.equipment_id
-        WHERE oi.order_id IS NULL;
+        SELECT product_name
+        FROM equipment;
     `;
     const [rows] = await db.query(query);
     return rows;
