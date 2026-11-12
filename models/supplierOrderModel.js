@@ -61,8 +61,6 @@ const SupplierOrderModel = {
   },
 
   // Create an order and all of its items together.
-  // A transaction means a failure rolls everything back,
-  // so we never end up with an order that has no items.
   create: async (supplierId, expectedDate, items) => {
     const connection = await db.getConnection();
 
@@ -92,18 +90,48 @@ const SupplierOrderModel = {
       await connection.rollback();
       throw error;
     } finally {
-      // Always return the connection to the pool.
       connection.release();
     }
   },
 
-  // Update order status. Only values in the database enum are accepted.
+  // Update order status. If marked as 'received', automatically increment equipment stock.
   updateStatus: async (id, status) => {
-    const [result] = await db.query(
-      "UPDATE supplier_orders SET order_status = ? WHERE supplier_order_id = ?",
-      [status, id]
-    );
-    return result.affectedRows;
+    const connection = await db.getConnection();
+    
+    try {
+      await connection.beginTransaction();
+      
+      // Update the status of the supplier order
+      const [result] = await connection.query(
+        "UPDATE supplier_orders SET order_status = ? WHERE supplier_order_id = ?",
+        [status, id]
+      );
+      
+      // If the status is changed to 'received', we must add the items to the inventory
+      if (status === 'received' && result.affectedRows > 0) {
+        // First, get all the items for this specific order
+        const [items] = await connection.query(
+          "SELECT equipment_id, quantity FROM supplier_order_items WHERE supplier_order_id = ?",
+          [id]
+        );
+        
+        // Loop through the items and add their quantities to the main equipment table
+        for (const item of items) {
+          await connection.query(
+            "UPDATE equipment SET stock_quantity = stock_quantity + ? WHERE equipment_id = ?",
+            [item.quantity, item.equipment_id]
+          );
+        }
+      }
+      
+      await connection.commit();
+      return result.affectedRows;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   },
 
   // Replace the items belonging to an order

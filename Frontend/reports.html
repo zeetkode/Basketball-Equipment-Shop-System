@@ -93,12 +93,33 @@
                 </tbody>
             </table>
         </section>
+        
+        <!-- 4. SAFETY STOCK ALERTS -->
+        <section class="panel" style="border: 2px solid #e74c3c;">
+            <h2 style="color: #c0392b;">⚠️ 4. Low Stock Alerts (Safety Stock Evaluation)</h2>
+            <p id="alerts-status" class="message loading">Evaluating inventory...</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Current Stock</th>
+                        <th>Reorder Point</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-alerts-data">
+                    <!-- Dynamically populated -->
+                </tbody>
+            </table>
+        </section>
     </main>
 
     <!-- Centralized Scripts -->
     <script src="config.js"></script>
     <script>
         const REPORTS_API = `${API_BASE_URL}/reports`;
+        const INVENTORY_API = `${API_BASE_URL}/inventory`;
 
         document.addEventListener("DOMContentLoaded", () => {
             
@@ -171,6 +192,30 @@
                         'No inventory or supply data available.'
                     );
                 }).catch(err => setStatusMessage('outer-status', err.message, true));
+                
+            // 4. Fetch Safety Stock Alerts
+            fetch(`${INVENTORY_API}/evaluate`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to evaluate stock levels');
+                    return res.json();
+                })
+                .then(data => {
+                    setStatusMessage('alerts-status', data.message, false);
+                    renderListOptimized(
+                        'stock-alerts-data', 
+                        data.inventory, 
+                        row => `
+                            <tr style="${row.status === 'CRITICAL' ? 'background-color: #fadbd8;' : ''}">
+                                <td>#${row.equipment_id}</td>
+                                <td><strong>${row.product_name}</strong></td>
+                                <td>${row.current_quantity}</td>
+                                <td>${row.reorder_point}</td>
+                                <td><span class="status-tag ${row.status.toLowerCase()}">${row.status}</span></td>
+                            </tr>
+                        `,
+                        'No inventory data found.'
+                    );
+                }).catch(err => setStatusMessage('alerts-status', err.message, true));
         });
     </script>
 </body>

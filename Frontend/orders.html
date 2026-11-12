@@ -1,154 +1,176 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shop Orders & Checkout - Basketball Shop</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shop Orders & Checkout - Basketball Shop</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Global Navigation Bar -->
+        <!-- Global Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="brand">🏀 Basketball Shop</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Users & Roles</a></li>
+            <li><a href="md.html">Master Data</a></li>
+            <li><a href="equipment.html">Equipment & Stock</a></li>
+            <li><a href="orders.html" class="active">Shop Orders</a></li>
+            <li><a href="supplierOrders.html">Supplier Orders</a></li>
+            <li><a href="shipments.html">Shipments</a></li>
+            <li><a href="reports.html">Reports</a></li>
+        </ul>
+    </nav>
 
-  <nav class="navbar">
-    <a href="index.html" class="brand">🏀 Basketball Shop</a>
-    <ul class="nav-links">
-      <li><a href="index.html">Users & Roles</a></li>
-      <li><a href="md.html">Master Data</a></li>
-      <li><a href="orders.html" class="active">Shop Orders</a></li>
-      <li><a href="supplierOrders.html">Supplier Orders</a></li>
-      <li><a href="shipments.html">Shipments</a></li>
-    </ul>
-  </nav>
+    <main>
+      <h1>Shop Orders & Checkout Processing</h1>
 
-  <main>
-    <h1>Shop Orders & Checkout Processing</h1>
+      <section class="panel">
+        <h2>Transaction Checkout Form</h2>
+        <p id="checkout-status" class="message"></p>
 
-    <section class="panel">
-      <h2>Transaction Checkout Form</h2>
-      <p id="checkout-status" class="message"></p>
-
-      <div class="form-row">
-        <div class="field">
-          <label for="customer_name_input">Customer Name</label>
-          <input
-            type="text"
-            id="customer_name_input"
-            placeholder="Type any customer name (e.g., Decy, Michael Jordan)..."
-            autocomplete="off"
-            required
-          />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="field" style="flex: 2;">
-          <label for="equipment_select">Select Equipment Item</label>
-          <select id="equipment_select">
-            <option value="">Loading equipment catalog...</option>
-          </select>
+        <div class="form-row">
+          <div class="field">
+            <label for="customer_name_input">Customer Name</label>
+            <input
+              type="text"
+              id="customer_name_input"
+              placeholder="Type any customer name (e.g., Decy, Michael Jordan)..."
+              autocomplete="off"
+              required
+            />
+          </div>
         </div>
 
-        <div class="field" style="flex: 1;">
-          <label for="item_quantity">Quantity</label>
-          <input type="number" id="item_quantity" min="1" value="1" />
+        <div class="form-row">
+          <div class="field" style="flex: 2">
+            <label for="equipment_select">Select Equipment Item</label>
+            <select id="equipment_select">
+              <option value="">Loading equipment catalog...</option>
+            </select>
+          </div>
+
+          <div class="field" style="flex: 1">
+            <label for="item_quantity">Quantity</label>
+            <input type="number" id="item_quantity" min="1" value="1" />
+          </div>
+
+          <div>
+            <button type="button" class="primary" id="addCartBtn">
+              + Add to Cart
+            </button>
+          </div>
         </div>
 
-        <div>
-          <button type="button" class="primary" id="addCartBtn">+ Add to Cart</button>
+        <h3>Current Cart Items</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th style="width: 100px">Quantity</th>
+              <th>Unit Price</th>
+              <th>Subtotal</th>
+              <th style="width: 80px">Action</th>
+            </tr>
+          </thead>
+          <tbody id="cartTableBody"></tbody>
+        </table>
+
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+          "
+        >
+          <h3 style="margin: 0">
+            Grand Total:
+            <span id="grandTotalDisplay" style="color: var(--primary-color)"
+              >$0.00</span
+            >
+          </h3>
+          <button type="button" class="primary" id="checkoutBtn" disabled>
+            Place Order & Save to Database
+          </button>
         </div>
-      </div>
+      </section>
 
-      <h3>Current Cart Items</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Item Name</th>
-            <th style="width: 100px;">Quantity</th>
-            <th>Unit Price</th>
-            <th>Subtotal</th>
-            <th style="width: 80px;">Action</th>
-          </tr>
-        </thead>
-        <tbody id="cartTableBody"></tbody>
-      </table>
+      <section class="panel">
+        <h2>Recent Processed Orders (JOIN Report)</h2>
+        <p id="orders-status" class="message loading">Loading orders...</p>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-        <h3 style="margin: 0;">Grand Total: <span id="grandTotalDisplay" style="color: var(--primary-color);">$0.00</span></h3>
-        <button type="button" class="primary" id="checkoutBtn" disabled>Place Order & Save to Database</button>
-      </div>
-    </section>
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Total Items</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th style="width: 90px">Action</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </section>
+    </main>
 
-    <section class="panel">
-      <h2>Recent Processed Orders (JOIN Report)</h2>
-      <p id="orders-status" class="message loading">Loading orders...</p>
+    <script src="config.js"></script>
+    <script>
+      let catalog = [];
+      let cart = [];
 
-      <table>
-        <thead>
-          <tr>
-            <th>Order ID</th>
-            <th>Customer</th>
-            <th>Total Items</th>
-            <th>Total Amount</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th style="width: 90px;">Action</th>
-          </tr>
-        </thead>
-        <tbody id="ordersTableBody"></tbody>
-      </table>
-    </section>
-  </main>
+      const USERS_API = `${API_BASE_URL}/users`;
+      const ORDERS_API = `${API_BASE_URL}/orders`;
+      const EQUIPMENT_API = `${API_BASE_URL}/orders/equipment`;
 
-  <script src="config.js"></script>
-  <script>
-    let catalog = [];
-    let cart = [];
+      async function loadCatalog() {
+        const select = document.getElementById("equipment_select");
+        try {
+          const response = await fetch(EQUIPMENT_API);
+          if (!response.ok)
+            throw new Error(
+              `HTTP ${response.status}: Failed to load equipment`,
+            );
+          catalog = await response.json();
 
-    const USERS_API = `${API_BASE_URL}/users`;
-    const ORDERS_API = `${API_BASE_URL}/orders`;
-    const EQUIPMENT_API = `${API_BASE_URL}/orders/equipment`;
+          select.innerHTML = '<option value="">-- Choose Equipment --</option>';
+          catalog.forEach((item) => {
+            const opt = document.createElement("option");
+            opt.value = item.equipment_id;
+            opt.textContent = `${item.product_name} - $${Number(item.price).toFixed(2)} (Stock: ${item.stock_quantity})`;
+            select.appendChild(opt);
+          });
 
-    async function loadCatalog() {
-      const select = document.getElementById('equipment_select');
-      try {
-        const response = await fetch(EQUIPMENT_API);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to load equipment`);
-        catalog = await response.json();
-
-        select.innerHTML = '<option value="">-- Choose Equipment --</option>';
-        catalog.forEach(item => {
-          const opt = document.createElement('option');
-          opt.value = item.equipment_id;
-          opt.textContent = `${item.product_name} - $${Number(item.price).toFixed(2)} (Stock: ${item.stock_quantity})`;
-          select.appendChild(opt);
-        });
-
-        setStatusMessage('checkout-status', '', false);
-      } catch (err) {
-        select.innerHTML = '<option value="">Unable to load items</option>';
-        setStatusMessage('checkout-status', err.message, true);
+          setStatusMessage("checkout-status", "", false);
+        } catch (err) {
+          select.innerHTML = '<option value="">Unable to load items</option>';
+          setStatusMessage("checkout-status", err.message, true);
+        }
       }
-    }
 
-    async function loadOrders() {
-      const statusEl = document.getElementById('orders-status');
-      statusEl.textContent = 'Loading orders...';
-      statusEl.className = 'message loading';
+      async function loadOrders() {
+        const statusEl = document.getElementById("orders-status");
+        statusEl.textContent = "Loading orders...";
+        statusEl.className = "message loading";
 
-      try {
-        const response = await fetch(ORDERS_API);
-        if (!response.ok) throw new Error('Failed to fetch orders');
-        const orders = await response.json();
+        try {
+          const response = await fetch(ORDERS_API);
+          if (!response.ok) throw new Error("Failed to fetch orders");
+          const orders = await response.json();
 
-        statusEl.textContent = 'Orders up to date.';
-        statusEl.className = 'message success';
+          statusEl.textContent = "Orders up to date.";
+          statusEl.className = "message success";
 
-        renderListOptimized(
-          'ordersTableBody',
-          orders,
-          order => `
+          renderListOptimized(
+            "ordersTableBody",
+            orders,
+            (order) => `
             <tr>
               <td>#${order.order_id}</td>
-              <td><strong>${order.customer_name || 'Customer'}</strong></td>
+              <td><strong>${order.customer_name || "Customer"}</strong></td>
               <td>${order.items_count || 1} item(s)</td>
               <td>$${Number(order.total_amount).toFixed(2)}</td>
               <td><span class="status-tag ${order.order_status}">${order.order_status}</span></td>
@@ -158,50 +180,62 @@
               </td>
             </tr>
           `,
-          'No shop orders recorded yet.'
-        );
-      } catch (err) {
-        setStatusMessage('orders-status', err.message, true);
-      }
-    }
-
-    window.deleteOrder = async (orderId) => {
-      if (!confirm(`Are you sure you want to delete Order #${orderId}? Its items will be returned to stock.`)) {
-        return;
+            "No shop orders recorded yet.",
+          );
+        } catch (err) {
+          setStatusMessage("orders-status", err.message, true);
+        }
       }
 
-      try {
-        const response = await fetch(`${ORDERS_API}/${orderId}`, { method: 'DELETE' });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Failed to delete order.');
+      window.deleteOrder = async (orderId) => {
+        if (
+          !confirm(
+            `Are you sure you want to delete Order #${orderId}? Its items will be returned to stock.`,
+          )
+        ) {
+          return;
+        }
 
-        setStatusMessage('orders-status', `Order #${orderId} deleted and stock restored.`, false);
-        loadOrders();
-        loadCatalog();
-      } catch (err) {
-        setStatusMessage('orders-status', err.message, true);
-      }
-    };
+        try {
+          const response = await fetch(`${ORDERS_API}/${orderId}`, {
+            method: "DELETE",
+          });
+          const result = await response.json();
+          if (!response.ok)
+            throw new Error(result.error || "Failed to delete order.");
 
-    function renderCart() {
-      const container = document.getElementById('cartTableBody');
-      const checkoutBtn = document.getElementById('checkoutBtn');
+          setStatusMessage(
+            "orders-status",
+            `Order #${orderId} deleted and stock restored.`,
+            false,
+          );
+          loadOrders();
+          loadCatalog();
+        } catch (err) {
+          setStatusMessage("orders-status", err.message, true);
+        }
+      };
 
-      if (cart.length === 0) {
-        container.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Your cart is empty. Select an item above to start.</td></tr>';
-        document.getElementById('grandTotalDisplay').textContent = '$0.00';
-        checkoutBtn.disabled = true;
-        return;
-      }
+      function renderCart() {
+        const container = document.getElementById("cartTableBody");
+        const checkoutBtn = document.getElementById("checkoutBtn");
 
-      let grandTotal = 0;
-      let html = '';
+        if (cart.length === 0) {
+          container.innerHTML =
+            '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Your cart is empty. Select an item above to start.</td></tr>';
+          document.getElementById("grandTotalDisplay").textContent = "$0.00";
+          checkoutBtn.disabled = true;
+          return;
+        }
 
-      cart.forEach((item, index) => {
-        const subtotal = item.price * item.quantity;
-        grandTotal += subtotal;
+        let grandTotal = 0;
+        let html = "";
 
-        html += `
+        cart.forEach((item, index) => {
+          const subtotal = item.price * item.quantity;
+          grandTotal += subtotal;
+
+          html += `
           <tr>
             <td><strong>${item.product_name}</strong></td>
             <td>
@@ -213,154 +247,192 @@
               <button type="button" class="delete-btn" onclick="removeCartItem(${index})">Remove</button>
             </td>
           </tr>`;
-      });
-
-      container.innerHTML = html;
-      document.getElementById('grandTotalDisplay').textContent = `$${grandTotal.toFixed(2)}`;
-      checkoutBtn.disabled = false;
-    }
-
-    document.getElementById('addCartBtn').addEventListener('click', () => {
-      const select = document.getElementById('equipment_select');
-      const equipmentId = parseInt(select.value, 10);
-      const qty = parseInt(document.getElementById('item_quantity').value, 10);
-
-      if (!equipmentId || qty < 1) {
-        setStatusMessage('checkout-status', 'Select an item and enter a valid quantity.', true);
-        return;
-      }
-
-      const item = catalog.find(e => e.equipment_id === equipmentId);
-      if (!item) return;
-
-      const existingIndex = cart.findIndex(c => c.equipment_id === equipmentId);
-      const currentInCart = existingIndex > -1 ? cart[existingIndex].quantity : 0;
-      const totalRequested = currentInCart + qty;
-
-      if (totalRequested > item.stock_quantity) {
-        setStatusMessage('checkout-status', `Cannot add more than available stock (${item.stock_quantity}).`, true);
-        return;
-      }
-
-      setStatusMessage('checkout-status', '', false);
-
-      if (existingIndex > -1) {
-        cart[existingIndex].quantity += qty;
-      } else {
-        cart.push({
-          equipment_id: item.equipment_id,
-          product_name: item.product_name,
-          price: Number(item.price),
-          stock_quantity: item.stock_quantity,
-          quantity: qty
-        });
-      }
-
-      renderCart();
-    });
-
-    window.updateCartQuantity = (index, value) => {
-      const parsed = parseInt(value, 10);
-      if (parsed > 0 && parsed <= cart[index].stock_quantity) {
-        cart[index].quantity = parsed;
-      }
-      renderCart();
-    };
-
-    window.removeCartItem = (index) => {
-      cart.splice(index, 1);
-      renderCart();
-    };
-
-    async function resolveUserId(enteredName) {
-      const trimmed = enteredName.trim();
-
-      try {
-        const res = await fetch(USERS_API);
-        if (res.ok) {
-          const users = await res.json();
-          const existing = users.find(u =>
-            (u.full_name && u.full_name.trim().toLowerCase() === trimmed.toLowerCase()) ||
-            (u.username && u.username.trim().toLowerCase() === trimmed.toLowerCase())
-          );
-          if (existing) return existing.user_id;
-        }
-      } catch (err) {
-        console.warn('Could not query users:', err);
-      }
-
-      try {
-        const createRes = await fetch(USERS_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: trimmed,
-            password: 'password123',
-            role_id: 2
-          })
         });
 
-        if (!createRes.ok) {
-          throw new Error('Could not create customer account.');
-        }
-
-        const res = await fetch(USERS_API);
-        if (res.ok) {
-          const users = await res.json();
-          const created = users.find(u => u.username && u.username.toLowerCase() === trimmed.toLowerCase());
-          if (created) return created.user_id;
-        }
-      } catch (err) {
-        console.error('Failed to create customer:', err);
-      }
-
-      return 2;
-    }
-
-    document.getElementById('checkoutBtn').addEventListener('click', async () => {
-      const customerName = document.getElementById('customer_name_input').value.trim();
-      const checkoutBtn = document.getElementById('checkoutBtn');
-
-      if (!customerName) {
-        setStatusMessage('checkout-status', 'Please enter a customer name.', true);
-        document.getElementById('customer_name_input').focus();
-        return;
-      }
-
-      checkoutBtn.disabled = true;
-
-      try {
-        const userId = await resolveUserId(customerName);
-
-        const response = await fetch(ORDERS_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: userId,
-            items: cart.map(i => ({ equipment_id: i.equipment_id, quantity: i.quantity }))
-          })
-        });
-
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Failed to process order.');
-
-        setStatusMessage('checkout-status', `Order #${result.order_id} placed successfully for "${customerName}"! Total: $${result.total_amount}`, false);
-        cart = [];
-        document.getElementById('customer_name_input').value = '';
-        renderCart();
-        loadCatalog();
-        loadOrders();
-      } catch (err) {
-        setStatusMessage('checkout-status', err.message, true);
+        container.innerHTML = html;
+        document.getElementById("grandTotalDisplay").textContent =
+          `$${grandTotal.toFixed(2)}`;
         checkoutBtn.disabled = false;
       }
-    });
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadCatalog();
-      loadOrders();
-      renderCart();
-    });
-  </script>
-</body>
+      document.getElementById("addCartBtn").addEventListener("click", () => {
+        const select = document.getElementById("equipment_select");
+        const equipmentId = parseInt(select.value, 10);
+        const qty = parseInt(
+          document.getElementById("item_quantity").value,
+          10,
+        );
+
+        if (!equipmentId || qty < 1) {
+          setStatusMessage(
+            "checkout-status",
+            "Select an item and enter a valid quantity.",
+            true,
+          );
+          return;
+        }
+
+        const item = catalog.find((e) => e.equipment_id === equipmentId);
+        if (!item) return;
+
+        const existingIndex = cart.findIndex(
+          (c) => c.equipment_id === equipmentId,
+        );
+        const currentInCart =
+          existingIndex > -1 ? cart[existingIndex].quantity : 0;
+        const totalRequested = currentInCart + qty;
+
+        if (totalRequested > item.stock_quantity) {
+          setStatusMessage(
+            "checkout-status",
+            `Cannot add more than available stock (${item.stock_quantity}).`,
+            true,
+          );
+          return;
+        }
+
+        setStatusMessage("checkout-status", "", false);
+
+        if (existingIndex > -1) {
+          cart[existingIndex].quantity += qty;
+        } else {
+          cart.push({
+            equipment_id: item.equipment_id,
+            product_name: item.product_name,
+            price: Number(item.price),
+            stock_quantity: item.stock_quantity,
+            quantity: qty,
+          });
+        }
+
+        renderCart();
+      });
+
+      window.updateCartQuantity = (index, value) => {
+        const parsed = parseInt(value, 10);
+        if (parsed > 0 && parsed <= cart[index].stock_quantity) {
+          cart[index].quantity = parsed;
+        }
+        renderCart();
+      };
+
+      window.removeCartItem = (index) => {
+        cart.splice(index, 1);
+        renderCart();
+      };
+
+      async function resolveUserId(enteredName) {
+        const trimmed = enteredName.trim();
+
+        try {
+          const res = await fetch(USERS_API);
+          if (res.ok) {
+            const users = await res.json();
+            const existing = users.find(
+              (u) =>
+                (u.full_name &&
+                  u.full_name.trim().toLowerCase() === trimmed.toLowerCase()) ||
+                (u.username &&
+                  u.username.trim().toLowerCase() === trimmed.toLowerCase()),
+            );
+            if (existing) return existing.user_id;
+          }
+        } catch (err) {
+          console.warn("Could not query users:", err);
+        }
+
+        try {
+          const createRes = await fetch(USERS_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: trimmed,
+              password: "password123",
+              role_id: 2,
+            }),
+          });
+
+          if (!createRes.ok) {
+            throw new Error("Could not create customer account.");
+          }
+
+          const res = await fetch(USERS_API);
+          if (res.ok) {
+            const users = await res.json();
+            const created = users.find(
+              (u) =>
+                u.username &&
+                u.username.toLowerCase() === trimmed.toLowerCase(),
+            );
+            if (created) return created.user_id;
+          }
+        } catch (err) {
+          console.error("Failed to create customer:", err);
+        }
+
+        return 2;
+      }
+
+      document
+        .getElementById("checkoutBtn")
+        .addEventListener("click", async () => {
+          const customerName = document
+            .getElementById("customer_name_input")
+            .value.trim();
+          const checkoutBtn = document.getElementById("checkoutBtn");
+
+          if (!customerName) {
+            setStatusMessage(
+              "checkout-status",
+              "Please enter a customer name.",
+              true,
+            );
+            document.getElementById("customer_name_input").focus();
+            return;
+          }
+
+          checkoutBtn.disabled = true;
+
+          try {
+            const userId = await resolveUserId(customerName);
+
+            const response = await fetch(ORDERS_API, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: userId,
+                items: cart.map((i) => ({
+                  equipment_id: i.equipment_id,
+                  quantity: i.quantity,
+                })),
+              }),
+            });
+
+            const result = await response.json();
+            if (!response.ok)
+              throw new Error(result.error || "Failed to process order.");
+
+            setStatusMessage(
+              "checkout-status",
+              `Order #${result.order_id} placed successfully for "${customerName}"! Total: $${result.total_amount}`,
+              false,
+            );
+            cart = [];
+            document.getElementById("customer_name_input").value = "";
+            renderCart();
+            loadCatalog();
+            loadOrders();
+          } catch (err) {
+            setStatusMessage("checkout-status", err.message, true);
+            checkoutBtn.disabled = false;
+          }
+        });
+
+      window.addEventListener("DOMContentLoaded", () => {
+        loadCatalog();
+        loadOrders();
+        renderCart();
+      });
+    </script>
+  </body>
 </html>
