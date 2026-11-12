@@ -1,9 +1,8 @@
-
 const express = require("express");
 const router = express.Router();
+const inventoryController = require("../controllers/inventoryController");
 
-const controller = require("../controllers/inventoryController");
-
-router.get("/safety-stock-check", controller.checkSafetyStock);
+// This explicitly handles the GET request to /api/inventory/evaluate
+router.get("/evaluate", inventoryController.checkSafetyStock);
 
 module.exports = router;

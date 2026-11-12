@@ -1,29 +1,103 @@
-<!-- Example snippet for equipment.html -->
-<table class="table">
-    <thead>
-        <!-- Equipment and Stock Monitoring Module -->
-        <tr>
-            <th>Product Name</th>
-            <th>Stock Qty</th>
-            <th>Safety Level</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-    <% equipment.forEach(function(item) { %>
-    <!-- Highlight the row if stock is low or equal to safety level -->
-    <tr class="<%= item.stock_quantity <= item.min_safety_level ? 'table-danger' : '' %>">
-        <td><%= item.product_name %></td>
-        <td><%= item.stock_quantity %></td>
-        <td><%= item.min_safety_level %></td>
-        <td>
-            <% if (item.stock_quantity <= item.min_safety_level) { %>
-                <span class="badge bg-danger">Low Stock</span>
-            <% } else { %>
-                <span class="text-success">Normal</span>
-            <% } %>
-        </td>
-        <!-- Low stock monitoring active --> 
-    </tr>
-    <% }); %>
-</tbody>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment & Stock - Basketball Shop</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Global Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="brand">🏀 Basketball Shop</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Users & Roles</a></li>
+            <li><a href="md.html">Master Data</a></li>
+            <li><a href="equipment.html" class="active">Equipment & Stock</a></li>
+            <li><a href="orders.html">Shop Orders</a></li>
+            <li><a href="supplierOrders.html">Supplier Orders</a></li>
+            <li><a href="shipments.html">Shipments</a></li>
+            <li><a href="reports.html">Reports</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Equipment and Stock Monitoring</h1>
+        
+        <section class="panel">
+            <h2>Current Inventory Levels</h2>
+            <p id="equip-status" class="message loading">Evaluating stock data...</p>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Stock Qty</th>
+                        <th>Reorder Point</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="equipment-data">
+                    <!-- Dynamically populated via JavaScript -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Centralized Scripts -->
+    <script src="config.js"></script>
+    <script>
+        // Point this to the advanced inventory evaluation endpoint!
+        const INVENTORY_API = `${API_BASE_URL}/inventory/evaluate`;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch(INVENTORY_API)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to evaluate stock levels');
+                    return res.json();
+                })
+                .then(data => {
+                    const tbody = document.getElementById('equipment-data');
+                    const statusMsg = document.getElementById('equip-status');
+                    
+                    if (!data.inventory || data.inventory.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No equipment found in catalog.</td></tr>';
+                        statusMsg.textContent = 'Catalog is empty.';
+                        statusMsg.className = 'message';
+                        return;
+                    }
+
+                    let html = '';
+                    data.inventory.forEach(item => {
+                        // Use the exact status provided by the backend service
+                        const isCritical = item.status === 'CRITICAL';
+                        
+                        const rowStyle = isCritical ? 'background-color: #fadbd8;' : '';
+                        const statusBadge = isCritical 
+                            ? '<span style="background-color: #e74c3c; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9em;">CRITICAL</span>' 
+                            : '<span style="color: #27ae60; font-weight: bold;">OK</span>';
+
+                        html += `
+                            <tr style="${rowStyle}">
+                                <td><strong>${item.product_name}</strong></td>
+                                <td>${item.current_quantity}</td>
+                                <td>${item.reorder_point}</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tbody.innerHTML = html;
+                    statusMsg.textContent = 'Stock monitoring active.';
+                    statusMsg.className = 'message success';
+                })
+                .catch(err => {
+                    const statusMsg = document.getElementById('equip-status');
+                    statusMsg.textContent = err.message;
+                    statusMsg.className = 'message error';
+                });
+        });
+    </script>
+</body>
+</html>
