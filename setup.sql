@@ -98,8 +98,101 @@ CREATE TABLE inventory (
     sku VARCHAR(50) NOT NULL UNIQUE,
     stock_quantity INT NOT NULL DEFAULT 0,
     min_safety_level INT NOT NULL DEFAULT 5,
+    daily_sales_rate DECIMAL(10,2) NOT NULL DEFAULT 0,
+supplier_lead_time_days INT NOT NULL DEFAULT 0,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+CREATE TABLE stock_alerts (
+    alert_id INT AUTO_INCREMENT PRIMARY KEY,
+    inventory_id INT NOT NULL,
+    status ENUM('CRITICAL', 'RESOLVED') NOT NULL DEFAULT 'CRITICAL',
+    alert_type VARCHAR(50) NOT NULL DEFAULT 'REORDER_NEEDED',
+    reorder_point DECIMAL(10,2) NOT NULL,
+    current_quantity INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP NULL,
+    FOREIGN KEY (inventory_id)
+        REFERENCES inventory(inventory_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE alert_audit_logs (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    alert_id INT NOT NULL,
+    inventory_id INT NOT NULL,
+    previous_quantity INT NOT NULL,
+    changed_quantity INT NOT NULL,
+    triggered_action VARCHAR(100) NOT NULL,
+    logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (alert_id)
+        REFERENCES stock_alerts(alert_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (inventory_id)
+        REFERENCES inventory(inventory_id)
+        ON DELETE CASCADE
+);
+
+DELIMITER //
+
+CREATE TRIGGER after_inventory_stock_update
+AFTER UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+    DECLARE v_reorder_point DECIMAL(10,2);
+    DECLARE v_alert_id INT DEFAULT NULL;
+
+    IF NEW.stock_quantity <> OLD.stock_quantity THEN
+
+        SET v_reorder_point =
+            (NEW.daily_sales_rate * NEW.supplier_lead_time_days)
+            + NEW.min_safety_level;
+
+        IF NEW.stock_quantity < v_reorder_point THEN
+
+            SELECT MAX(alert_id)
+            INTO v_alert_id
+            FROM stock_alerts
+            WHERE inventory_id = NEW.inventory_id
+              AND status = 'CRITICAL';
+
+            IF v_alert_id IS NULL THEN
+
+                INSERT INTO stock_alerts (
+                    inventory_id, status, alert_type,
+                    reorder_point, current_quantity
+                )
+                VALUES (
+                    NEW.inventory_id, 'CRITICAL', 'REORDER_NEEDED',
+                    v_reorder_point, NEW.stock_quantity
+                );
+
+                SET v_alert_id = LAST_INSERT_ID();
+
+            ELSE
+
+                UPDATE stock_alerts
+                SET current_quantity = NEW.stock_quantity,
+                    reorder_point = v_reorder_point
+                WHERE alert_id = v_alert_id;
+
+            END IF;
+
+            INSERT INTO alert_audit_logs (
+                alert_id, inventory_id, previous_quantity,
+                changed_quantity, triggered_action
+            )
+            VALUES (
+                v_alert_id, NEW.inventory_id, OLD.stock_quantity,
+                NEW.stock_quantity, 'REORDER_NEEDED'
+            );
+
+        END IF;
+
+    END IF;
+END //
+
+DELIMITER ;
+
 
 -- ========================================================
 -- 3. TRANSACTIONS MODULE (Member 3 Scope)
@@ -225,3 +318,105 @@ INSERT INTO equipment (product_name, sku, price, category_id, brand_id, stock_qu
 ('Spalding Heavyweight Training Ball', 'TRN-SPA-108', 49.99, 5, 4, 10),
 ('Nike Hoops Elite Pro Backpack', 'ACC-NIK-109', 85.00, 4, 1, 12),
 ('Wilson NBA Official Game Ball', 'BALL-WIL-110', 199.95, 1, 3, 5);
+
+-- ==========================================
+-- 5. MEMBER 5: STOCK ALERTS & AUDIT LOGGING
+-- ==========================================
+
+-- Create stock alerts table
+CREATE TABLE stock_alerts (
+    alert_id INT AUTO_INCREMENT PRIMARY KEY,
+    inventory_id INT NOT NULL,
+    status ENUM('CRITICAL', 'RESOLVED') NOT NULL DEFAULT 'CRITICAL',
+    alert_type VARCHAR(50) NOT NULL DEFAULT 'REORDER_NEEDED',
+    reorder_point DECIMAL(10,2) NOT NULL,
+    current_quantity INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP NULL,
+
+    FOREIGN KEY (inventory_id)
+        REFERENCES inventory(inventory_id)
+        ON DELETE CASCADE
+);
+
+-- Create audit logs table
+CREATE TABLE alert_audit_logs (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    alert_id INT NOT NULL,
+    inventory_id INT NOT NULL,
+    previous_quantity INT NOT NULL,
+    changed_quantity INT NOT NULL,
+    triggered_action VARCHAR(100) NOT NULL,
+    logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (alert_id)
+        REFERENCES stock_alerts(alert_id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (inventory_id)
+        REFERENCES inventory(inventory_id)
+        ON DELETE CASCADE
+);
+
+-- Automatically create alerts when stock is below reorder point
+DELIMITER //
+
+CREATE TRIGGER after_inventory_stock_update
+AFTER UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+    DECLARE v_reorder_point DECIMAL(10,2);
+    DECLARE v_alert_id INT DEFAULT NULL;
+
+    IF NEW.stock_quantity <> OLD.stock_quantity THEN
+
+        SET v_reorder_point =
+            (NEW.daily_sales_rate * NEW.supplier_lead_time_days)
+            + NEW.min_safety_level;
+
+        IF NEW.stock_quantity < v_reorder_point THEN
+
+            SELECT MAX(alert_id)
+            INTO v_alert_id
+            FROM stock_alerts
+            WHERE inventory_id = NEW.inventory_id
+              AND status = 'CRITICAL';
+
+            IF v_alert_id IS NULL THEN
+
+                INSERT INTO stock_alerts (
+                    inventory_id, status, alert_type,
+                    reorder_point, current_quantity
+                )
+                VALUES (
+                    NEW.inventory_id, 'CRITICAL', 'REORDER_NEEDED',
+                    v_reorder_point, NEW.stock_quantity
+                );
+
+                SET v_alert_id = LAST_INSERT_ID();
+
+            ELSE
+
+                UPDATE stock_alerts
+                SET current_quantity = NEW.stock_quantity,
+                    reorder_point = v_reorder_point
+                WHERE alert_id = v_alert_id;
+
+            END IF;
+
+            INSERT INTO alert_audit_logs (
+                alert_id, inventory_id,
+                previous_quantity, changed_quantity,
+                triggered_action
+            )
+            VALUES (
+                v_alert_id, NEW.inventory_id,
+                OLD.stock_quantity, NEW.stock_quantity,
+                'REORDER_NEEDED'
+            );
+
+        END IF;
+    END IF;
+END //
+
+DELIMITER ;
