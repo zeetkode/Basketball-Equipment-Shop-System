@@ -2,8 +2,9 @@ const db = require('../db');
 
 const getInnerJoin = async () => {
     const query = `
-        SELECT b.name AS brand, c.name AS category, SUM(e.stock_quantity) AS total_sold
-        FROM equipment e
+        SELECT b.name AS brand, c.name AS category, SUM(oi.quantity) AS total_sold
+        FROM order_items oi
+        INNER JOIN equipment e ON oi.equipment_id = e.equipment_id
         INNER JOIN brands b ON e.brand_id = b.id
         INNER JOIN categories c ON e.category_id = c.id
         GROUP BY b.name, c.name;
@@ -14,7 +15,7 @@ const getInnerJoin = async () => {
 
 const getLeftJoinCustomers = async () => {
     const query = `
-        SELECT u.full_name AS customer_name
+        SELECT COALESCE(NULLIF(u.full_name, ''), u.username, 'Unknown Customer') AS customer_name
         FROM users u
         LEFT JOIN orders o ON u.user_id = o.user_id
         WHERE o.order_id IS NULL AND u.role_id = 2;
@@ -26,7 +27,9 @@ const getLeftJoinCustomers = async () => {
 const getLeftJoinProducts = async () => {
     const query = `
         SELECT product_name
-        FROM equipment;
+        FROM equipment e
+        LEFT JOIN order_items oi ON e.equipment_id = oi.equipment_id
+        WHERE oi.order_item_id IS NULL;
     `;
     const [rows] = await db.query(query);
     return rows;
